@@ -50,6 +50,7 @@ define ipmi::user (
 
   exec { "ipmi_user_channel_setaccess_${title}":
     command     => "/usr/bin/ipmitool channel setaccess 1 ${user_id} callin=on ipmi=on link=on privilege=${priv}",
+    unless      => "test ${user_id} = 2",
     refreshonly => true,
   }
 }
