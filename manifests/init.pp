@@ -62,4 +62,7 @@ class ipmi (
     create_resources('ipmi::network', $networks)
   }
 
+  Anchor['ipmi::end'] -> Ipmi::Snmp <| |>
+  Anchor['ipmi::end'] -> Ipmi::User <| |>
+  Anchor['ipmi::end'] -> Ipmi::Network <| |>
 }

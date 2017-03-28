@@ -8,8 +8,6 @@ define ipmi::user (
   $user_id = 3,
 )
 {
-  require ::ipmi
-
   validate_string($password,$user)
   validate_integer($priv)
   validate_integer($user_id)

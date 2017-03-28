@@ -6,8 +6,6 @@ define ipmi::snmp (
   $lan_channel = 1,
 )
 {
-  require ::ipmi
-
   validate_string($snmp)
   validate_integer($lan_channel)
 

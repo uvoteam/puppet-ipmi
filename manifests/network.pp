@@ -9,8 +9,6 @@ define ipmi::network (
   $lan_channel = 1,
 )
 {
-  require ::ipmi
-
   validate_string($ip,$netmask,$gateway,$type)
   validate_integer($lan_channel)
   validate_re($type, '^dhcp$|^static$', 'Network type must be either dhcp or static')
