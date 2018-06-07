@@ -2,18 +2,24 @@
 #
 
 define ipmi::user (
-  String                                     $password,
-  String                                     $user     = 'root',
-  Enum[callback,user,operator,administrator] $priv     = administrator,
-  Integer                                    $user_id  = 3,
+  Integer                                                       $user_id,
+  Boolean                                                       $enable   = true,
+  String                                                        $user     = '',
+  Optional[String]                                              $password = undef,
+  Optional[Enum[callback,user,operator,administrator,disabled]] $priv     = undef,
 )
 {
-  $privilege = upcase($priv)
+  $privilege = upcase($priv ? {
+    disabled => 'no access',
+    default  => $priv,
+  })
+
   $priv_id   = $priv ? {
     callback      => 1,
     user          => 2,
     operator      => 3,
     administrator => 4,
+    disabled      => 15,
   }
 
   Exec {
@@ -41,6 +47,16 @@ define ipmi::user (
     command => "/usr/bin/ipmitool user set password ${user_id} \'${password}\'",
     unless  => "/usr/bin/ipmitool user test ${user_id} 16 \'${password}\'",
     notify  => [Exec["ipmi_user_enable_${title}"], Exec["ipmi_user_enable_sol_${title}"], Exec["ipmi_user_channel_setaccess_${title}"]],
+  }
+
+  $status = $enable ? {
+    true  => 'enable',
+    false => 'disable',
+  }
+
+  exec { "${status} ipmi user ${title}":
+    command => "/usr/bin/ipmitool user ${status} ${user_id}",
+    unless  => "/usr/bin/test \"$(ipmitool channel getaccess 1 ${user_id} | grep '^Enable Status' | awk '{print \$4}')\" = ${status}d",
   }
 
   exec { "ipmi_user_enable_sol_${title}":

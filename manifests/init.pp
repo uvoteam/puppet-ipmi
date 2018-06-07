@@ -9,6 +9,7 @@ class ipmi (
   Boolean               $watchdog               = false,
   Hash[String,Any]      $snmps                  = {},
   Hash[String,Any]      $users                  = {},
+  Boolean               $block_unmanaged_users  = false,
   Hash[String,Any]      $networks               = {},
 ) inherits ipmi::params {
   include ::ipmi::install
@@ -39,6 +40,24 @@ class ipmi (
 
   if $users {
     create_resources('ipmi::user', $users)
+  }
+
+  if $block_unmanaged_users {
+    unless empty($facts['ipmi_users']) {
+      $not_defined_users = $users.reduce($facts['ipmi_users']) |$user_list, $kv| {
+        $user_name = $kv[0]
+        $user_id   = $kv[1][user_id]
+        $user_list.filter |$user| { !( (!$user_id and $user_name == $user['name'] ) or $user['uid'] == $user_id ) }
+      }
+
+      $not_defined_users.each |$userdata| {
+        $uid = $userdata['uid']
+        ::ipmi::user { "disabled${uid}":
+          user   => $userdata['name'],
+          enable => false,
+        }
+      }
+    }
   }
 
   if $networks {
