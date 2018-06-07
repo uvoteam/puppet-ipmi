@@ -2,22 +2,22 @@
 #
 
 define ipmi::user (
-  $password,
-  $user = 'root',
-  $priv = 4,
-  $user_id = 3,
+  String                                     $password,
+  String                                     $user     = 'root',
+  Enum[callback,user,operator,administrator] $priv     = administrator,
+  Integer                                    $user_id  = 3,
 )
 {
-  validate_string($password,$user)
-  validate_integer($priv)
-  validate_integer($user_id)
+  $privilege = upcase($priv)
+  $priv_id   = $priv ? {
+    callback      => 1,
+    user          => 2,
+    operator      => 3,
+    administrator => 4,
+  }
 
-  case $priv {
-    1: {$privilege = 'CALLBACK'}
-    2: {$privilege = 'USER'}
-    3: {$privilege = 'OPERATOR'}
-    4: {$privilege = 'ADMINISTRATOR'}
-    default: {fail('invalid privilege level specified')}
+  Exec {
+    require => Class['ipmi::install']
   }
 
   exec { "ipmi_user_enable_${title}":
@@ -32,7 +32,7 @@ define ipmi::user (
   }
 
   exec { "ipmi_user_priv_${title}":
-    command => "/usr/bin/ipmitool user priv ${user_id} ${priv} 1",
+    command => "/usr/bin/ipmitool user priv ${user_id} ${priv_id} 1",
     unless  => "/usr/bin/test \"$(ipmitool user list 1 | grep '^${user_id}' | awk '{print \$6}')\" = ${privilege}",
     notify  => [Exec["ipmi_user_enable_${title}"], Exec["ipmi_user_enable_sol_${title}"], Exec["ipmi_user_channel_setaccess_${title}"]],
   }

@@ -69,12 +69,10 @@ class IPMIChannel
         end
       end
     end
-    @has_facts = true
   end
 end
 
 channel_array = (1..11).to_a
-channel_array.each do | channel |
-  @channel_nr = channel
-  IPMIChannel.new(@channel_nr).load_facts
+channel_array.each do |channel|
+  IPMIChannel.new(channel).load_facts
 end
