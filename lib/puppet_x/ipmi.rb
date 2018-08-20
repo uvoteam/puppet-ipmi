@@ -2,7 +2,8 @@
 class IPMI
     class <<self
         def debug *args
-            Puppet::Util::Log.create({ level: :debug, source: 'Lib[ipmi]', message: args.join(' ') })
+            # FIXME
+            Puppet::Util::Log.create({ level: :warning, source: 'Lib[ipmi]', message: args.join(' ') })
         end
 
         #
@@ -50,7 +51,7 @@ class IPMI
             @cache[commandline] ||=
                 begin
                     IPMI.debug "running: #{commandline}"
-                    text = IPMI.ipmitoolcmd args
+                    text = IPMI.ipmitoolcmd.call args
                     case type
                     when :multi_tuples
                         IPMI.parse_sectioned_colon_tuples text

@@ -11,10 +11,7 @@ Puppet::Type.newtype(:ipmi_user) do
     end
 
     newparam(:userid, :namevar => true) do
-        desc 'User ID (integer, read-only, namevar). When creating user, will be automatically assigned first free one, if not specified.'
-        validate do |value|
-            raise ArgumentError, 'IPMI UserID is read-only parameter and cannot be assigned'
-        end
+        desc 'User ID (integer, namevar). When creating user, will be automatically assigned first free one, if not specified.'
     end
 
     def self.title_patterns
