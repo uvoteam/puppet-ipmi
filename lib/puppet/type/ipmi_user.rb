@@ -1,6 +1,6 @@
 
 Puppet::Type.newtype(:ipmi_user) do
-    @doc <<-'DOC'
+    @doc = <<-'DOC'
     This represents ipmi user
     DOC
 
@@ -15,6 +15,14 @@ Puppet::Type.newtype(:ipmi_user) do
         validate do |value|
             raise ArgumentError, 'IPMI UserID is read-only parameter and cannot be assigned'
         end
+    end
+
+    def self.title_patterns
+        [
+            [ /^(\S+):(\d+)$/,  [ [ :name, :userid ] ] ],
+            [ /^(\d+)$/,        [ [ :userid ] ] ],
+            [ /^(\S+)$/,        [ [ :name ] ] ],
+        ]
     end
 
     newproperty(:role) do
