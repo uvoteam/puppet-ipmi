@@ -17,7 +17,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     # provider stuff
     def self.instances
-      (1..ipmi.users.max).map do |uid|
+      (1..ipmi.users.maximum_users).map do |uid|
           user = ipmi.users.user(uid)
           new(
               :ensure          => (user.name.empty? and not user.enabled) ? :absent : :present,
