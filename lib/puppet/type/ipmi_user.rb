@@ -23,9 +23,9 @@ Puppet::Type.newtype(:ipmi_user) do
     end
 
     newproperty(:role) do
-        desc 'Privilege level of this user (admin, operator, user, callback, none). Defaults to none.'
-        newvalues(:admin, :operator, :user, :callback, :none)
-        defaultto(:none)
+        desc 'Privilege level of this user (admin, operator, user, callback, no_access). Defaults to no_access.'
+        newvalues(:admin, :operator, :user, :callback, :no_access)
+        defaultto(:no_access)
     end
 
     newproperty(:immutable) do

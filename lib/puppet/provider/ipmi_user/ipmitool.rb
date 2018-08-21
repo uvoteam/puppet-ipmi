@@ -43,12 +43,14 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     # case of UID shortage use their slots for present resources.
     def self.prefetch resources
         insts = instances
+        taken_ids = []
         resources.each do |name, resource|
             instance = insts.find { |inst| inst.name. == name }
-            instance ||= insts.find { |inst| inst.userid > 2 and inst.ensure == :absent }
+            instance ||= insts.find { |inst| inst.userid > 2 and inst.ensure == :absent and not taken_ids.include? inst.userid }
             if not instance
                 fail("Unable to find free UID for resource Ipmi_user[#{name}]")
             end
+            taken_ids << instance.userid
             resource.provider = instance
         end
     end
@@ -62,7 +64,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def create
-        ipmi.users.user(resource[:userid]).tap do |user|
+        ipmi.users.user(@property_hash[:userid]).tap do |user|
             user.name      = resource[:name]
             user.enabled   = true
             user.privilege = resource[:role]
@@ -76,7 +78,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def destroy
-        ipmi.users.user(resource[:userid]).tap do |user|
+        ipmi.users.user(@property_hash[:userid]).tap do |user|
             user.name      = ''
             user.enabled   = false
             user.privilege = :no_access
@@ -101,19 +103,23 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def password= new_pass, length = 16
-        IPMI.users.user(resource[:userid]).password = new_pass
+        IPMI.users.user(@property_hash[:userid]).password = new_pass
     end
 
     def callin= value
-        ipmi.users.user(resource[:userid]).callin = value
+        ipmi.users.user(@property_hash[:userid]).callin = value
     end
 
     def link_auth= value
-        ipmi.users.user(resource[:userid]).link = value
+        ipmi.users.user(@property_hash[:userid]).link = value
     end
 
     def ipmi_msg= value
-        ipmi.users.user(resource[:userid]).ipmi = value
+        ipmi.users.user(@property_hash[:userid]).ipmi = value
+    end
+
+    def role= value
+        ipmi.users.user(@property_hash[:userid]).privilege = value
     end
 end
 

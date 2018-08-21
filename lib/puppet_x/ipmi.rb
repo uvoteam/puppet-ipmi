@@ -319,7 +319,7 @@ class IPMI
                     :oem
                 when 'CALLBACK'
                     :callback
-                when 'Unknown (0x00)'
+                when 'Unknown (0x00)', 'NO ACCESS'
                     :no_access
                 else
                     value
@@ -389,7 +389,7 @@ class IPMI
         end
 
         def password= value, length = 16
-            IPMI.ipmitool(['user', 'set', 'password', uid, value, legth.to_s], :plain)
+            IPMI.ipmitool(['user', 'set', 'password', uid, value, length.to_s], :plain)
         end
 
         def callin
@@ -422,7 +422,7 @@ class IPMI
         end
 
         def privilege= value
-            set :privilege, USER.from_priv(value)
+            set :privilege, User.from_priv(value)
         end
 
         def enabled
