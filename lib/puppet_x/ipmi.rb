@@ -1,4 +1,8 @@
 
+#
+#  Container class without instance
+#
+
 class IPMI
     class <<self
         def debug *args
@@ -93,8 +97,61 @@ class IPMI
     end
 end
 
+#
+#  Channel instance
+#
+
 class IPMI
     class LAN
+        class SOL
+            attr_reader :cid
+
+            def initialize cid
+                @cid = cid
+            end
+
+            def get field
+                IPMI.ipmitool(['sol', 'info', cid, '-c'], :csv, [
+                    :set_in_progress, :enabled, :force_encryption, :force_authentication,
+                    :privilege_level, :character_accumulate_level, :character_send_threshold,
+                    :retry_count, :retry_interval, :volatile_bit_rate, :non_volatile_bit_rate,
+                    :payload_channel, :payload_port
+                ]).first.fetch(field, [])
+            end
+
+            def set field, value
+                IPMI.ipmitool(['sol', 'set', field.to_s.tr('_', '-'), value, cid], :plain)
+            end
+
+            #
+            #  Fields
+            #
+
+            def enabled
+                get(:enabled) == 'true'
+            end
+
+            def enabled= value
+                set :enabled, value.to_s
+            end
+
+            def force_encryption
+                get(:force_encryption) == 'true'
+            end
+
+            def force_encryption= value
+                set :force_encryption, value.to_s
+            end
+
+            def force_authentication
+                get(:force_authentication) == 'true'
+            end
+
+            def force_authentication= value
+                set :force_authentication, value.to_s
+            end
+        end
+
         class <<self
             def to_ipsrc value
                 case value
@@ -250,59 +307,16 @@ class IPMI
         def cipher_privs= value
             set :cipher_privs, value.map { |priv| LAN.from_priv priv }.join('')
         end
-    end
-end
 
-class IPMI
-    class SOL
-        attr_reader :cid
-
-        def initialize cid
-            @cid = cid
-        end
-
-        def get field
-            IPMI.ipmitool(['sol', 'info', cid, '-c'], :csv, [
-                :set_in_progress, :enabled, :force_encryption, :force_authentication,
-                :privilege_level, :character_accumulate_level, :character_send_threshold,
-                :retry_count, :retry_interval, :volatile_bit_rate, :non_volatile_bit_rate,
-                :payload_channel, :payload_port
-            ]).first.fetch(field, [])
-        end
-
-        def set field, value
-            IPMI.ipmitool(['sol', 'set', field.to_s.tr('_', '-'), value, cid], :plain)
-        end
-
-        #
-        #  Fields
-        #
-
-        def enabled
-            get(:enabled) == 'true'
-        end
-
-        def enabled= value
-            set :enabled, value.to_s
-        end
-
-        def force_encryption
-            get(:force_encryption) == 'true'
-        end
-
-        def force_encryption= value
-            set :force_encryption, value.to_s
-        end
-
-        def force_authentication
-            get(:force_authentication) == 'true'
-        end
-
-        def force_authentication= value
-            set :force_authentication, value.to_s
+        def sol
+            @sol ||= SOL.new cid
         end
     end
 end
+
+#
+#  Users instance/container
+#
 
 class IPMI
     class User
