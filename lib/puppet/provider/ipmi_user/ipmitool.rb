@@ -44,12 +44,12 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def self.prefetch resources
         insts = instances
         resources.each do |name, resource|
-             instance = insts.find { |inst| inst[:name] == name }
-             instance ||= insts.find { |inst| inst[:userid] > 2 and inst[:ensure] == :absent }
-             if not instance
-                 fail("Unable to find free UID for resource Ipmi_user[#{name}]")
-             end
-             resource.provider = instance
+            instance = insts.find { |inst| inst.name. == name }
+            instance ||= insts.find { |inst| inst.userid > 2 and inst.ensure == :absent }
+            if not instance
+                fail("Unable to find free UID for resource Ipmi_user[#{name}]")
+            end
+            resource.provider = instance
         end
     end
 
