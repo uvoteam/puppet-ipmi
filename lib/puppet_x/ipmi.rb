@@ -73,24 +73,20 @@ class IPMI
         #  Global system state objects
         #
 
-        def detect_lan_cid
-            # we're optimizing here, since LAN channel usually have ID 1
-            [ 1, 0, *(2..12), 15 ].find do |cid|
-                IPMI.ipmitool(['channel', 'info', cid], :tuples).fetch(:channel_medium_type, []).first == '802.3 LAN'
-            end
+        def lan_channels
+            [*(0..12), 15]
+                .lazy
+                .select { |cid| IPMI.ipmitool(['channel', 'info', cid], :tuples).fetch(:channel_medium_type, []).first == '802.3 LAN' }
+                .map { |cid| IPMI.lan cid }
         end
 
-        def lan cid = IPMI.detect_lan_cid
+        def lan cid = IPMI.lan_channels.first.cid
             @lan||= {}
             @lan[cid] ||= IPMI::LAN.new cid
         end
 
-        def sol cid = IPMI.detect_lan_cid
-            @sol||= {}
-            @sol[cid] ||= IPMI::SOL.new cid
-        end
-
-        def users cid = IPMI.detect_lan_cid
+        # XXX maybe make 'users' a lan accessor
+        def users cid = IPMI.lan.cid
             @users||= {}
             @users[cid] ||= IPMI::Users.new cid
         end
