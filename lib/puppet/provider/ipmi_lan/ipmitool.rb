@@ -17,25 +17,25 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
 
     # provider stuff
     def self.instances
-        ipmi.lan_channels.map do |channel|
+        ipmi.lan_channels.map do |lan|
             new(
                 # XXX user-style strict checking?
-                :ensure             => channel.address == '0.0.0.0' ? :absent : :present,
-                :channel            => channel.cid.to_s,
-                :auth_admin         => channel.auth[:admin].sort,
-                :auth_operator      => channel.auth[:operator].sort,
-                :auth_user          => channel.auth[:user].sort,
-                :auth_callabck      => channel.auth[:callback].sort,
-                :address            => channel.ipaddr,
-                :netmask            => channel.netmask,
-                :gateway            => channel.defgw_ipaddr,
-                :backup_gateway     => channel.bakgw_ipaddr,
-                :arp_enable         => (channel.arp_respond ? (channel.arp_generate ? :advertise : :true) : :false),
-                :snmp_community     => channel.snmp,
-                :sol_enable         => channel.sol.enabled,
-                :sol_encryption     => channel.sol.force_encryption,
-                :sol_authentication => channel.sol.force_authentication,
-                :ciphers            => channel.cipher_privs.each_with_index.map { |priv, index| (priv.nil? or priv == :no_access) ? nil : index }.compact,
+                :ensure             => lan.address == '0.0.0.0' ? :absent : :present,
+                :channel            => lan.cid.to_s,
+                :auth_admin         => lan.auth[:admin].sort,
+                :auth_operator      => lan.auth[:operator].sort,
+                :auth_user          => lan.auth[:user].sort,
+                :auth_callabck      => lan.auth[:callback].sort,
+                :address            => lan.ipaddr,
+                :netmask            => lan.netmask,
+                :gateway            => lan.defgw_ipaddr,
+                :backup_gateway     => lan.bakgw_ipaddr,
+                :arp_enable         => (lan.arp_respond ? (lan.arp_generate ? :advertise : :true) : :false),
+                :snmp_community     => lan.snmp,
+                :sol_enable         => lan.sol.enabled,
+                :sol_encryption     => lan.sol.force_encryption,
+                :sol_authentication => lan.sol.force_authentication,
+                :ciphers            => lan.cipher_privs.each_with_index.map { |priv, index| (priv.nil? or priv == :no_access) ? nil : index }.compact,
             )
         end
     end
@@ -87,48 +87,60 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def destroy
-        ipmi.users.user(@property_hash[:userid]).tap do |user|
-            user.name      = ''
-            user.enabled   = false
-            user.privilege = :no_access
-            user.callin    = false
-            user.link      = false
-            user.ipmi      = false
-            user.sol       = false
+        ipmi.lan(@property_hash[:channel]).tap do |lan|
+            lan.auth                     = {
+                :admin    => [ :md5 ],
+                :operator => [ :md5 ],
+                :user     => [ :md5 ],
+                :callback => [ :md5 ],
+            }
+            lan.ipaddr                   = '0.0.0.0'
+            lan.netmask                  = '0.0.0.0'
+            lan.defgw_ipaddr             = '0.0.0.0'
+            lan.bakgw_ipaddr             = '0.0.0.0'
+            lan.arp_enable               = false
+            lan.arp_gratituous           = false
+            lan.snmp                     = 'PiecKek9Ob'
+            lan.sol.enabled              = false
+            lan.sol.force_encryption     = true
+            lan.sol.force_authentication = true
+            lan.cipher_privs             = [
+                :no_access, :no_access, :no_access, :admin,
+                :no_access: :no_access, :no_access, :no_access,
+                :admin, :no_access, :no_access, :no_access,
+                :admin, :no_access, :no_access ]
         end
     end
 
-    def password
-      '*hidden*'
-    end
-
-    def password_insync? pass, length = 16
-      begin
-        ipmi.users.user(@property_hash[:userid]).password? pass, length
-        true
-      rescue Puppet::ExecutionFailure => err
-        false
-      end
-    end
-
-    def password= new_pass, length = 16
-        IPMI.users.user(@property_hash[:userid]).password = new_pass
-    end
-
-    def callin= value
-        ipmi.users.user(@property_hash[:userid]).callin = value
-    end
-
-    def link_auth= value
-        ipmi.users.user(@property_hash[:userid]).link = value
-    end
-
-    def ipmi_msg= value
-        ipmi.users.user(@property_hash[:userid]).ipmi = value
-    end
-
-    def role= value
-        ipmi.users.user(@property_hash[:userid]).privilege = value
+    def flush
+        unless @property_hash.empty?
+            ipmi.lan(@property_hash[:channel]).tap do |lan|
+                lan.auth                     =
+                    [:admin, :operator, :user, :callback].map do |role|
+                        [ role, @property_hash[:"auth_#{role}"] ] if @property_hash[:"auth_#{role}"]
+                    end.compact.to_h
+                lan.ipaddr                   = @property_hash[:address]                    if @property_hash.has_key? :address
+                lan.netmask                  = @property_hash[:netmask]                    if @property_hash.has_key? :netmask
+                lan.defgw_ipaddr             = @property_hash[:gateway]                    if @property_hash.has_key? :gateway
+                lan.bakgw_ipaddr             = @property_hash[:backup_gateway]             if @property_hash.has_key? :backup_gateway
+                lan.arp_enable               = (@property_hash[:arp_enable] != :false)     if @property_hash.has_key? :arp_enable
+                lan.arp_gratituous           = (@property_hash[:arp_enable] == :advertise) if @property_hash.has_key? :arp_enable
+                lan.snmp                     = @property_hash[:snmp_community]             if @property_hash.has_key? :snmp_community
+                lan.sol.enabled              = @property_hash[:sol_enable]                 if @property_hash.has_key? :sol_enable
+                lan.sol.force_encryption     = @property_hash[:sol_encryption]             if @property_hash.has_key? :sol_encryption
+                lan.sol.force_authentication = @property_hash[:sol_authentication]         if @property_hash.has_key? :sol_authentication
+                if @property_hash.has_key? :ciphers
+                    lan.cipher_privs =
+                        lan.cipher_privs.each_with_index.map do |priv, index|
+                            if @property_hash[:ciphers].include?(index)
+                                :admin
+                            else
+                                :no_access
+                            end
+                        end
+                end
+            end
+        end
     end
 end
 
