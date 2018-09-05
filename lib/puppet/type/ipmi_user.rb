@@ -13,7 +13,7 @@ Puppet::Type.newtype(:ipmi_user) do
     newparam(:userid, :namevar => true) do
         desc 'User ID (integer, namevar). When creating user, will be automatically assigned first free one, if not specified.'
         munge do |value|
-            vaule.to_i
+            value.to_i
         end
     end
 
