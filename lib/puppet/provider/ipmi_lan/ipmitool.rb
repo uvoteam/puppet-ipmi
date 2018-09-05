@@ -20,7 +20,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
         ipmi.lan_channels.map do |lan|
             new(
                 # XXX user-style strict checking?
-                :ensure             => lan.address == '0.0.0.0' ? :absent : :present,
+                :ensure             => (lan.address == '0.0.0.0') ? :absent : :present,
                 :channel            => lan.cid.to_s,
                 :auth_admin         => lan.auth[:admin].sort,
                 :auth_operator      => lan.auth[:operator].sort,
