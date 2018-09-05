@@ -56,7 +56,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     # case of UID shortage use their slots for present resources.
     def self.prefetch resources
         insts     = instances
-        taken_ids = Set.new resources.map { |resource| resource[:userid] }.compact
+        taken_ids = Set.new resources.map { |name, resource| resource[:userid] }.compact
         resources.each do |name, resource|
             available_instances = insts
                 .select do |instance|
