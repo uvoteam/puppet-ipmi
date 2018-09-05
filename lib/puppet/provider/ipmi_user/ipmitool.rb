@@ -23,6 +23,8 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             (1..ipmi.users(channel.cid).maximum_users).map do |uid|
                 user = ipmi.users(channel.cid).user(uid)
                 new(
+                    # XXX
+                    :name            => "#{user.name}:#{uid}@#{channel.cid}",
                     # we're forcing all parameters to be as in absent state, otherwise we consider user present
                     :ensure          => (
                         user.name      == ''         and
@@ -33,7 +35,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                         user.ipmi      == false      and
                         user.sol       == false
                     ) ? :absent : :present,
-                    :name            => user.name,
                     :enable          => user.enabled,
                     :userid          => uid,
                     :channel         => channel.cid,
@@ -70,13 +71,13 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 if resource[:userid]
                     available_instances.find { |instance| instance.userid == resource[:userid] } \
                     or
-                    fail("User slot with UID #{resource[:userid]}@#{channel} not found")
+                    fail("User slot with UID #{resource[:userid]} not found")
                 else
                     available_instances.find { |instance| instance.name == name } \
                     or
                     available_instances.find { |instance| instance.userid > 2 and instance.ensure = :absent } \
                     or
-                    fail("Unable to find free UID for resource Ipmi_user[#{name}@#{channel}]")
+                    fail("Unable to find free UID for resource Ipmi_user[#{name}]")
                 end
 
             taken_ids << instance.userid

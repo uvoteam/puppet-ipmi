@@ -19,6 +19,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     def self.instances
         ipmi.lan_channels.map do |lan|
             new(
+                :name               => lan.cid.to_s,
                 # XXX user-style strict checking?
                 :ensure             => (lan.ipaddr == '0.0.0.0') ? :absent : :present,
                 :channel            => lan.cid.to_s,

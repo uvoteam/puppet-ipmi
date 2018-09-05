@@ -80,7 +80,6 @@ class IPMI
 
         def lan_channels
             [*(0..11), 15]
-                .lazy
                 .select do |cid|
                     # there's no way to detect which channels exist, thus we're ignoring ipmitool fails on absent ones
                     begin
