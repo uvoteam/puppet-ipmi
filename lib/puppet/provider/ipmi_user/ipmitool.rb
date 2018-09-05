@@ -19,7 +19,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     # provider stuff
     def self.instances
-        ipmi.lan_channels.map do |channel|
+        ipmi.lan_channels.flat_map do |channel|
             (1..ipmi.users(channel.cid).maximum_users).map do |uid|
                 user = ipmi.users(channel.cid).user(uid)
                 new(
@@ -32,7 +32,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                         user.link      == false      and
                         user.ipmi      == false      and
                         user.sol       == false
-                    ) ? :present : :absent,
+                    ) ? :absent : :present,
                     :name            => user.name,
                     :enable          => user.enabled,
                     :userid          => uid,

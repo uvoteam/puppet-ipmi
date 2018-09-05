@@ -55,7 +55,12 @@ class IPMI
             @cache[commandline] ||=
                 begin
                     IPMI.debug "running: #{commandline}"
-                    text = IPMI.ipmitoolcmd.call args
+                    begin
+                        text = IPMI.ipmitoolcmd.call args
+                    rescue Exception => e
+                        @cache[commandline] = e.message
+                        raise
+                    end
                     case type
                     when :multi_tuples
                         IPMI.parse_sectioned_colon_tuples text
@@ -74,9 +79,16 @@ class IPMI
         #
 
         def lan_channels
-            [*(0..12), 15]
+            [*(0..11), 15]
                 .lazy
-                .select { |cid| IPMI.ipmitool(['channel', 'info', cid], :tuples).fetch(:channel_medium_type, []).first == '802.3 LAN' }
+                .select do |cid|
+                    # there's no way to detect which channels exist, thus we're ignoring ipmitool fails on absent ones
+                    begin
+                        IPMI.ipmitool(['channel', 'info', ('0x%x' % cid)], :tuples).fetch(:channel_medium_type, []).first == '802.3 LAN'
+                    rescue
+                        nil
+                    end
+                end
                 .map { |cid| IPMI.lan cid }
         end
 
