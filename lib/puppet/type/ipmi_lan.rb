@@ -1,6 +1,6 @@
 
 Puppet::Type.newtype(:ipmi_lan) do
-    @doc <<-'DOC'
+    @doc = <<-'DOC'
     This represents ipmi LAN channel.
     DOC
 
