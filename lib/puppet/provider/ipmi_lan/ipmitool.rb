@@ -104,11 +104,14 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.sol.enabled              = false
             lan.sol.force_encryption     = true
             lan.sol.force_authentication = true
-            lan.cipher_privs             = [
-                :no_access, :no_access, :no_access, :admin,
-                :no_access: :no_access, :no_access, :no_access,
-                :admin, :no_access, :no_access, :no_access,
-                :admin, :no_access, :no_access ]
+            lan.cipher_privs             =
+                lan.cipher_privs.each_with_index.map do |priv, index|
+                    if [3, 8, 12].include? index
+                        :admin
+                    else
+                        :no_access
+                    end
+                end
         end
     end
 
