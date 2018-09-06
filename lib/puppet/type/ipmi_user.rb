@@ -28,12 +28,12 @@ Puppet::Type.newtype(:ipmi_user) do
 
     def self.title_patterns
         [
-            [ /^(\S+):(\d+)@(\d+)$/,  [ [ :name ], [ :userid ], [ :channel ] ] ],
-            [ /^(\S+):(\d+)$/,        [ [ :name ], [ :userid ] ] ],
+            [ /^(\S*):(\d+)@(\d+)$/,  [ [ :name ], [ :userid ], [ :channel ] ] ],
+            [ /^(\S*):(\d+)$/,        [ [ :name ], [ :userid ] ] ],
             [ /^(\d+)@(\d+)$/,        [ [ :userid ], [ :channel ] ] ],
             [ /^(\d+)$/,              [ [ :userid ] ] ],
-            [ /^(\S+)@(\d+)$/,        [ [ :name ], [ :channel ] ] ],
-            [ /^(\S+)$/,              [ [ :name ] ] ],
+            [ /^(\S*)@(\d+)$/,        [ [ :name ], [ :channel ] ] ],
+            [ /^(\S*)$/,              [ [ :name ] ] ],
         ]
     end
 
