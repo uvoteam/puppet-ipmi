@@ -207,7 +207,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def default_channel
-        IPMI.lan.cid
+        ipmi.lan.cid
     end
 
     def flush
