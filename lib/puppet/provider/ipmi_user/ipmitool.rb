@@ -23,7 +23,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             (1..ipmi.users(channel.cid).maximum_users).map do |uid|
                 user = ipmi.users(channel.cid).user(uid)
                 new(
-                    # XXX
                     :name            => "#{user.name}:#{uid}@#{channel.cid}",
                     # we're forcing all parameters to be as in absent state, otherwise we consider user present
                     :ensure          => (
@@ -35,6 +34,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                         user.ipmi      == false      and
                         user.sol       == false
                     ) ? :absent : :present,
+                    :username        => user.name,
                     :enable          => user.enabled,
                     :userid          => uid,
                     :channel         => channel.cid,
@@ -53,35 +53,109 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     # connect system resources to the ones, declared in Puppet
     # The idea here is to mostly manage users by name, auto-assigning
     # them UIDs.
-    # FIXME: we can detect resources, that should be absent and in the
-    # case of UID shortage use their slots for present resources.
+    # FIXME: refactor this shit
     def self.prefetch resources
-        insts     = instances
-        taken_ids = Set.new resources.map { |name, resource| resource[:userid] }.compact
-        resources.each do |name, resource|
-            available_instances = insts
-                .select do |instance|
-                    instance.channel == (resource[:channel] ? resource[:channel] : IPMI.lan.cid)
-                end
-                .select do |instance|
-                    resource[:userid] or not taken_ids.include? instance.userid
-                end
+        insts           = instances
+        present, absent = resources.values.partition { |resource| resource.should(:ensure) == :present }
+        fixed, variable = present.partition { |resource| resource[:userid] }
+        taken_ids       = Set.new
 
-            instance =
-                if resource[:userid]
-                    available_instances.find { |instance| instance.userid == resource[:userid] } \
-                    or
-                    fail("User slot with UID #{resource[:userid]} not found")
-                else
-                    available_instances.find { |instance| instance.name == name } \
-                    or
-                    available_instances.find { |instance| instance.userid > 2 and instance.ensure == :absent } \
-                    or
-                    fail("Unable to find free UID for resource Ipmi_user[#{name}]")
-                end
+        # First we're placing any present resources with defined userid
+        fixed.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.userid == resource[:userid] }
 
-            taken_ids << instance.userid
-            resource.provider = instance
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        end.each do |resource|
+            fail("User slot with UID #{resource[:userid]} not found or already taken")
+        end
+
+        # Then we're assigning present resources with matching username
+        variable.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.username == resource[:username] }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        # Then we're assigning to any truly absent resources
+        end.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.userid > 2 and instance.ensure == :absent }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        # Then to 'relaxed' absent resources
+        end.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.userid > 2 and instance.username == '' and not instance.enable }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        # And finally anything goes to satisfy present resource needs
+        end.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.userid > 2 }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        end.each do |resource|
+            fail("Unable to find free UID for resource Ipmi_user[#{name}]")
+        end
+
+        # After present resources, we assign absent resources with userid
+        absent.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.userid == resource[:userid] }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        # After that - with matching name
+        end.select do |resource|
+            instance = insts
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| instance.username == resource[:username] }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+                false
+            end
+        # And finally just drop any 'absent' stragglers
+        end.each do |resource|
+            debug "Deleting absent resource Ipmi_user[#{resource[:name]}]"
+            resource.remove
         end
     end
 
@@ -95,7 +169,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def create
         ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
-            user.name      = resource[:name]
+            user.name      = resource[:username]
             user.enabled   = true
             user.privilege = resource[:role]
             user.callin    = resource[:callin]
@@ -132,9 +206,14 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         end
     end
 
+    def default_channel
+        IPMI.lan.cid
+    end
+
     def flush
         unless @property_hash.empty?
             ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
+                # XXX username
                 user.password  = @property_hash[:password]  if @property_hash.has_key? :password
                 user.privilege = @property_hash[:role]      if @property_hash.has_key? :role
                 user.enabled   = @property_hash[:enable]    if @property_hash.has_key? :enable

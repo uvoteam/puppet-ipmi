@@ -8,7 +8,17 @@ Puppet::Type.newtype(:ipmi_user) do
 
     ensurable
 
-    newparam(:name, :namevar => true) do
+    # this is needed for resource discovery to work (resources can have empty username)
+    # and to have convenient access to the user name parameter value
+    newparam(:name) do
+        desc 'Dummy parameter to hold resource title. Do not use.'
+
+        defaultto do
+            @title
+        end
+    end
+
+    newparam(:username, :namevar => true) do
         desc 'Name for this user (namevar)'
     end
 
@@ -24,16 +34,20 @@ Puppet::Type.newtype(:ipmi_user) do
         munge do |value|
             value.to_i
         end
+
+        defaultto do
+            resource.provider.default_channel
+        end
     end
 
     def self.title_patterns
         [
-            [ /^(\S*):(\d+)@(\d+)$/,  [ [ :name ], [ :userid ], [ :channel ] ] ],
-            [ /^(\S*):(\d+)$/,        [ [ :name ], [ :userid ] ] ],
+            [ /^(\S*):(\d+)@(\d+)$/,  [ [ :username ], [ :userid ], [ :channel ] ] ],
+            [ /^(\S*):(\d+)$/,        [ [ :username ], [ :userid ] ] ],
             [ /^(\d+)@(\d+)$/,        [ [ :userid ], [ :channel ] ] ],
             [ /^(\d+)$/,              [ [ :userid ] ] ],
-            [ /^(\S*)@(\d+)$/,        [ [ :name ], [ :channel ] ] ],
-            [ /^(\S*)$/,              [ [ :name ] ] ],
+            [ /^(\S*)@(\d+)$/,        [ [ :username ], [ :channel ] ] ],
+            [ /^(\S*)$/,              [ [ :username ] ] ],
         ]
     end
 
