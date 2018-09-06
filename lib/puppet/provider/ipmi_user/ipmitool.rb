@@ -109,7 +109,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 resource.provider = instance
             end
         # And finally anything goes to satisfy present resource needs
-        end.rejcet do |resource|
+        end.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
