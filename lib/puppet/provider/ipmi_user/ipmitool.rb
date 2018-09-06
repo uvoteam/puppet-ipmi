@@ -75,7 +75,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 else
                     available_instances.find { |instance| instance.name == name } \
                     or
-                    available_instances.find { |instance| instance.userid > 2 and instance.ensure = :absent } \
+                    available_instances.find { |instance| instance.userid > 2 and instance.ensure == :absent } \
                     or
                     fail("Unable to find free UID for resource Ipmi_user[#{name}]")
                 end
