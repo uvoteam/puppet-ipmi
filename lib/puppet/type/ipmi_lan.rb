@@ -1,4 +1,6 @@
 
+require 'puppet/property/boolean'
+
 Puppet::Type.newtype(:ipmi_lan) do
     @doc = <<-'DOC'
     This represents ipmi LAN channel.

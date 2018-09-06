@@ -1,4 +1,6 @@
 
+require 'puppet/property/boolean'
+
 Puppet::Type.newtype(:ipmi_user) do
     @doc = <<-'DOC'
     This represents ipmi user
