@@ -14,7 +14,7 @@ Puppet::Type.newtype(:ipmi_user) do
         desc 'Dummy parameter to hold resource title. Do not use.'
 
         defaultto do
-            @title
+            resource.title
         end
     end
 

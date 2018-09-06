@@ -61,7 +61,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         taken_ids       = Set.new
 
         # First we're placing any present resources with defined userid
-        fixed.select do |resource|
+        fixed.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -70,14 +70,13 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         end.each do |resource|
             fail("User slot with UID #{resource[:userid]} not found or already taken")
         end
 
         # Then we're assigning present resources with matching username
-        variable.select do |resource|
+        variable.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -86,10 +85,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         # Then we're assigning to any truly absent resources
-        end.select do |resource|
+        end.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -98,10 +96,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         # Then to 'relaxed' absent resources
-        end.select do |resource|
+        end.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -110,10 +107,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         # And finally anything goes to satisfy present resource needs
-        end.select do |resource|
+        end.rejcet do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -122,14 +118,13 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         end.each do |resource|
             fail("Unable to find free UID for resource Ipmi_user[#{name}]")
         end
 
         # After present resources, we assign absent resources with userid
-        absent.select do |resource|
+        absent.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -138,10 +133,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         # After that - with matching name
-        end.select do |resource|
+        end.reject do |resource|
             instance = insts
                 .select { |instance| instance.channel == resource[:channel] }
                 .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
@@ -150,7 +144,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             unless instance.nil?
                 taken_ids << "#{instance.userid}@#{instance.channel}"
                 resource.provider = instance
-                false
             end
         # And finally just drop any 'absent' stragglers
         end.each do |resource|
