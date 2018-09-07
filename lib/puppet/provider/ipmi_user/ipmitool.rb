@@ -9,7 +9,7 @@ module IPMIResourceFilter
                 .find   { |instance| yield instance, resource }
 
             unless instance.nil?
-                debug "Assigning #{instance.userid}@#{instance.channel} to Ipmi_user[#{resource[:name]}]"
+                Puppet.debug "Assigning #{instance.userid}@#{instance.channel} to Ipmi_user[#{resource[:name]}]"
                 resource.provider = instance
                 instances.delete_if { |i| i.eql? instance }
             end

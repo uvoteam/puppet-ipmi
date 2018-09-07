@@ -90,6 +90,11 @@ Puppet::Type.newtype(:ipmi_user) do
 
     newproperty(:password) do
         desc 'Password for ipmi user'
+
+        def should_to_s value
+            '*' * value.length
+        end
+
         def insync? is
             provider.password_insync? should
         end
