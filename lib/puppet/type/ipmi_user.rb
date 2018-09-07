@@ -3,9 +3,13 @@ require 'puppet/property/boolean'
 
 Puppet::Type.newtype(:ipmi_user) do
     @doc = <<-'DOC'
-    This represents ipmi user
+    This represents ipmi user.
+    You can optionally define userid and channel number, either as resource params, or as part of title:
+    "${user_name}:${user_id}@${channel_number}"
     DOC
 
+    # we add ensure parameter here only to be able to use resource purging.
+    # otherwise we could just sync all parameters.
     ensurable
 
     # this is needed for resource discovery to work (resources can have empty username)
@@ -16,10 +20,6 @@ Puppet::Type.newtype(:ipmi_user) do
         defaultto do
             resource.title
         end
-    end
-
-    newparam(:username, :namevar => true) do
-        desc 'Name for this user (namevar)'
     end
 
     newparam(:userid, :namevar => true) do
@@ -38,6 +38,10 @@ Puppet::Type.newtype(:ipmi_user) do
         defaultto do
             resource.provider.default_channel
         end
+    end
+
+    newproperty(:username) do
+        desc 'Name for this user (namevar)'
     end
 
     def self.title_patterns

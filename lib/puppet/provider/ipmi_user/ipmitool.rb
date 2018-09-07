@@ -1,23 +1,17 @@
 
-require 'set'
-
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 
 module IPMIResourceFilter
-    def taken_ids
-        @@taken_ids ||= []
-    end
-
     def assign_resources instances
         self.reject do |resource|
             instance = instances
                 .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
                 .find   { |instance| yield instance, resource }
 
             unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
+                debug "Assigning #{instance.userid}@#{instance.channel} to Ipmi_user[#{resource[:name]}]"
                 resource.provider = instance
+                instances.delete_if { |i| i.eql? instance }
             end
         end.extend(IPMIResourceFilter)
     end
@@ -70,21 +64,18 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         end
     end
 
-    # connect system resources to the ones, declared in Puppet
-    # The idea here is to mostly manage users by name, auto-assigning
-    # them UIDs.
-    # FIXME: refactor this shit
+    # Connect system resources to the ones, declared in Puppet
+    # The idea here is to mostly manage users by name, auto-assignin them UIDs.
     def self.prefetch resources
         insts           = instances
         present, absent = resources.values.partition { |resource| resource.should(:ensure) == :present }
         fixed, variable = present.partition { |resource| resource[:userid] }
-        taken_ids       = Set.new
 
         # First we're placing any present resources with defined userid.
         fixed.extend(IPMIResourceFilter)
             .assign_resources(insts) { |instance, resource| instance.userid == resource[:userid] }
             .each do |resource|
-                fail("User slot with UID #{resource[:userid]} not found or already taken")
+                fail("User slot with UID #{resource[:userid]} required for Ipmi_user[#{resource[:name]}] not found or already taken")
             end
 
         # Then we're assigning present resources with matching username.
@@ -164,7 +155,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def flush
         unless @property_hash.empty?
             ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
-                # XXX username
+                user.name      = @property_hash[:username]  if @property_hash.has_key? :username
                 user.password  = @property_hash[:password]  if @property_hash.has_key? :password
                 user.privilege = @property_hash[:role]      if @property_hash.has_key? :role
                 user.enabled   = @property_hash[:enable]    if @property_hash.has_key? :enable
