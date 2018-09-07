@@ -3,6 +3,26 @@ require 'set'
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 
+module IPMIResourceFilter
+    def taken_ids
+        @@taken_ids ||= []
+    end
+
+    def assign_resources instances
+        self.reject do |resource|
+            instance = instances
+                .select { |instance| instance.channel == resource[:channel] }
+                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
+                .find   { |instance| yield instance, resource }
+
+            unless instance.nil?
+                taken_ids << "#{instance.userid}@#{instance.channel}"
+                resource.provider = instance
+            end
+        end.extend(IPMIResourceFilter)
+    end
+end
+
 Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     commands :ipmitoolcmd => 'ipmitool'
 
@@ -60,96 +80,34 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         fixed, variable = present.partition { |resource| resource[:userid] }
         taken_ids       = Set.new
 
-        # First we're placing any present resources with defined userid
-        fixed.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.userid == resource[:userid] }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
+        # First we're placing any present resources with defined userid.
+        fixed.extend(IPMIResourceFilter)
+            .assign_resources(insts) { |instance, resource| instance.userid == resource[:userid] }
+            .each do |resource|
+                fail("User slot with UID #{resource[:userid]} not found or already taken")
             end
-        end.each do |resource|
-            fail("User slot with UID #{resource[:userid]} not found or already taken")
-        end
 
-        # Then we're assigning present resources with matching username
-        variable.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.username == resource[:username] }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
+        # Then we're assigning present resources with matching username.
+        # Then search for any absent resources, that we can reuse.
+        # While at that, we try to preserve as much existing data as possible, thus three rules instead of one.
+        variable.extend(IPMIResourceFilter)
+            .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
+            .assign_resources(insts) { |instance, resource| instance.userid > 2 and instance.ensure == :absent }
+            .assign_resources(insts) { |instance, resource| instance.userid > 2 and instance.username == '' and not instance.enable }
+            .assign_resources(insts) { |instance, resource| instance.userid > 2 }
+            .each do |resource|
+                fail("Unable to find free UID for resource Ipmi_user[#{resource[:name]}]")
             end
-        # Then we're assigning to any truly absent resources
-        end.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.userid > 2 and instance.ensure == :absent }
 
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
+        # After present resources, we assign absent resources with matching userid or username.
+        # And any still unassigned resources we just delete, since there's no way to determine their positioning.
+        absent.extend(IPMIResourceFilter)
+            .assign_resources(insts) { |instance, resource| instance.userid == resource[:userid] }
+            .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
+            .each do |resource|
+                debug "Deleting absent resource Ipmi_user[#{resource[:name]}]"
+                resource.remove
             end
-        # Then to 'relaxed' absent resources
-        end.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.userid > 2 and instance.username == '' and not instance.enable }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
-            end
-        # And finally anything goes to satisfy present resource needs
-        end.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.userid > 2 }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
-            end
-        end.each do |resource|
-            fail("Unable to find free UID for resource Ipmi_user[#{name}]")
-        end
-
-        # After present resources, we assign absent resources with userid
-        absent.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.userid == resource[:userid] }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
-            end
-        # After that - with matching name
-        end.reject do |resource|
-            instance = insts
-                .select { |instance| instance.channel == resource[:channel] }
-                .select { |instance| not taken_ids.include? "#{instance.userid}@#{instance.channel}" }
-                .find   { |instance| instance.username == resource[:username] }
-
-            unless instance.nil?
-                taken_ids << "#{instance.userid}@#{instance.channel}"
-                resource.provider = instance
-            end
-        # And finally just drop any 'absent' stragglers
-        end.each do |resource|
-            debug "Deleting absent resource Ipmi_user[#{resource[:name]}]"
-            resource.remove
-        end
     end
 
     # create default property accessors
