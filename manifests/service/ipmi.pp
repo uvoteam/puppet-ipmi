@@ -1,16 +1,17 @@
-# == Class: ipmi::service::ipmi
-#
-# This class should be considered private.
-#
+
 class ipmi::service::ipmi (
-  Enum[runnig,stopped] $ensure = running,
-  Boolean              $enable = true,
-  String               $ipmi_service_name = 'ipmi',
+    String                  $name,
+    Stdlib::Ensure::Service $ensure = $ipmi::service ? {
+        true    => running,
+        default => stopped,
+    },
+    Boolean                 $enable = $ipmi::service,
 ) {
-  service{ $ipmi_service_name:
-    ensure     => $ensure,
-    hasstatus  => true,
-    hasrestart => true,
-    enable     => $enable,
-  }
+    service{ $name:
+        ensure     => $ensure,
+        hasstatus  => true,
+        hasrestart => true,
+        enable     => $enable,
+    }
 }
+

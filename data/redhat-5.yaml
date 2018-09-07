@@ -1,0 +1,4 @@
+---
+ipmi::install::packages:
+    - OpenIPMI
+    - OpenIPMI-tools

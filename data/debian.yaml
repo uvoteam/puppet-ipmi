@@ -1,0 +1,6 @@
+---
+ipmi::install::packages:
+    - openipmi
+    - ipmitool
+ipmi::config::file: /etc/default/openipmi
+ipmi::service::ipmi::service: openipmi

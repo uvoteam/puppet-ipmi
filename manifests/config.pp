@@ -1,18 +1,18 @@
-# == Class: ipmi::config
-#
-# This class should be considered private.
-#
-class ipmi::config {
 
-  $watchdog_real = $::ipmi::watchdog ? {
-    true    => 'yes',
-    default => 'no',
-  }
+class ipmi::config (
+    Stdlib::Absolutepath $file,
+    Boolean              $watchdog = $ipmi::watchdog,
+){
+    $watchdog_real = $watchdog ? {
+        true    => 'yes',
+        default => 'no',
+    }
 
-  augeas { $ipmi::params::config_location:
-    context => "/files${ipmi::params::config_location}",
-    changes => [
-      "set IPMI_WATCHDOG ${watchdog_real}",
-    ],
-  }
+    augeas { 'configure ipmi watchdog':
+        context => "/files${file}",
+        changes => [
+            "set IPMI_WATCHDOG ${watchdog_real}",
+        ],
+    }
 }
+

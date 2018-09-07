@@ -1,0 +1,9 @@
+---
+version: 5
+hierarchy:
+    - name: Old redhat override
+      path: "%{osfamily}-%{operatingsystemmajrelease}.yaml"
+    - name: Common os settings
+      path: "%{osfamily}.yaml"
+    - name: Static commons
+      path: common.yaml
