@@ -456,11 +456,25 @@ class IPMI
         end
 
         def sol
-            IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).end_with? 'enabled'
+            begin
+                IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).end_with? 'enabled'
+            rescue
+                # this command can fail on RMM3 when user is disabled
+                if enabled
+                    raise
+                end
+            end
         end
 
         def sol= value
+            begin
             IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
+            rescue
+                # this command can fail on RMM3 when user is disabled
+                if enabled
+                    raise
+                end
+            end
         end
     end
 
