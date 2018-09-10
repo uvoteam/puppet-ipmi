@@ -10,8 +10,13 @@ Puppet::Type.newtype(:ipmi_lan) do
 
     newparam(:channel, :namevar => true) do
         desc 'Channel ID (integer, namevar).'
+
         validate do |value|
-            /^\d+$/ =~ value
+            value.is_a? Integer or /^\d+$/ =~ value
+        end
+
+        munge do |value|
+            value.to_i
         end
     end
 
@@ -19,15 +24,10 @@ Puppet::Type.newtype(:ipmi_lan) do
         newproperty(:"auth_#{role}", :array_matching => :all) do
             desc "Allows authentication methods (none, md5, md2, plain) for role #{role}"
 
-            #validate do |value|
-            #    debug "validating auth_#{role} (value = [#{value.first.class.name}])"
-            #    value.is_a?(Array) and (value - [:none, :md5, :md2, :plain]).empty?
-            #end
-
             newvalues(:none, :md5, :md2, :plain)
 
-            munge do |value|
-                value.sort.uniq
+            def insync is
+                (is - should).empty?
             end
         end
     end
@@ -85,13 +85,15 @@ Puppet::Type.newtype(:ipmi_lan) do
         desc 'List of ciphers to enable'
 
         validate do |value|
-            debug "called validate on: #{value}"
-            not value.find { |id| debug "validating #{value} of type #{value.class.name}"; /^\d+$/ =~ id }
+            value.is_a? Integer or /^\d+$/ =~ value
         end
 
         munge do |value|
-            debug "called munge on: #{value}"
-            value.map(&:to_i).sort.uniq
+            value.to_i
+        end
+
+        def insync is
+            (is - should).empty?
         end
     end
 end

@@ -6,7 +6,7 @@ class ipmi::service::ipmievd (
     },
     Boolean                 $enable = $ipmi::ipmievd,
 ) {
-    service{ 'ipmievd':
+    service { 'ipmievd':
         ensure     => $ensure,
         hasstatus  => true,
         hasrestart => true,

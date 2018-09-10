@@ -406,11 +406,12 @@ class IPMI
 
         # no getter method, we can only check if provided password matches the stored value
         def password? value, length = 16
-            IPMI.ipmitool(['user', 'test', uid, length.to_s, value], :plain)
+            IPMI.ipmitool(['user', 'test', uid, length, value], :plain)
         end
 
-        def password= value, length = 16
-            IPMI.ipmitool(['user', 'set', 'password', uid, value, length.to_s], :plain)
+        def password= args
+            value, length = args.is_a?(Array) ? args : [args, 16]
+            IPMI.ipmitool(['user', 'set', 'password', uid, value, length], :plain)
         end
 
         def callin

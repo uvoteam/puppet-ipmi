@@ -156,7 +156,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         unless @property_hash.empty?
             ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
                 user.name      = @property_hash[:username]       if @property_hash.has_key?(:username) and not @property_hash[:username].empty?
-                user.password  = (@property_hash[:password], 20) if @property_hash.has_key? :password
+                user.password  = @property_hash[:password], 20   if @property_hash.has_key? :password
                 user.privilege = @property_hash[:role]           if @property_hash.has_key? :role
                 user.enabled   = @property_hash[:enable]         if @property_hash.has_key? :enable
                 user.callin    = @property_hash[:callin]         if @property_hash.has_key? :callin

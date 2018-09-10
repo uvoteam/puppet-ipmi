@@ -1,13 +1,13 @@
 
 class ipmi::service::ipmi (
-    String                  $name,
-    Stdlib::Ensure::Service $ensure = $ipmi::service ? {
+    String                  $service = 'ipmi',
+    Stdlib::Ensure::Service $ensure  = $ipmi::service ? {
         true    => running,
         default => stopped,
     },
     Boolean                 $enable = $ipmi::service,
 ) {
-    service{ $name:
+    service { $service:
         ensure     => $ensure,
         hasstatus  => true,
         hasrestart => true,
