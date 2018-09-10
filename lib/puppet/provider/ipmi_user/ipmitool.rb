@@ -124,13 +124,13 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def destroy
         ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
+            user.sol       = false
             user.enabled   = false
-            user.name      = ''
             user.privilege = :no_access
             user.callin    = false
             user.link      = false
             user.ipmi      = false
-            user.sol       = false
+            user.name      = ''
         end
     end
 
@@ -155,14 +155,15 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def flush
         unless @property_hash.empty?
             ipmi.users(@property_hash[:channel]).user(@property_hash[:userid]).tap do |user|
-                user.name      = @property_hash[:username]  if @property_hash.has_key? :username
-                user.password  = @property_hash[:password]  if @property_hash.has_key? :password
-                user.privilege = @property_hash[:role]      if @property_hash.has_key? :role
-                user.enabled   = @property_hash[:enable]    if @property_hash.has_key? :enable
-                user.callin    = @property_hash[:callin]    if @property_hash.has_key? :callin
-                user.link      = @property_hash[:link_auth] if @property_hash.has_key? :link_auth
-                user.ipmi      = @property_hash[:ipmi_msg]  if @property_hash.has_key? :ipmi_msg
-                user.sol       = @property_hash[:sol]       if @property_hash.has_key? :sol
+                user.name      = @property_hash[:username]       if @property_hash.has_key?(:username) and not @property_hash[:username].empty?
+                user.password  = (@property_hash[:password], 20) if @property_hash.has_key? :password
+                user.privilege = @property_hash[:role]           if @property_hash.has_key? :role
+                user.enabled   = @property_hash[:enable]         if @property_hash.has_key? :enable
+                user.callin    = @property_hash[:callin]         if @property_hash.has_key? :callin
+                user.link      = @property_hash[:link_auth]      if @property_hash.has_key? :link_auth
+                user.ipmi      = @property_hash[:ipmi_msg]       if @property_hash.has_key? :ipmi_msg
+                user.sol       = @property_hash[:sol]            if @property_hash.has_key? :sol
+                user.name      = @property_hash[:username]       if @property_hash.has_key?(:username) and @property_hash[:username].empty?
             end
         end
     end

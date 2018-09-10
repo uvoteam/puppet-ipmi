@@ -447,7 +447,7 @@ class IPMI
         end
 
         def enabled
-            # XXX may be missing in output
+            # XXX will be missing in output with ipmitool < 1.8.18
             get(:enable_status) == 'enabled'
         end
 
@@ -459,8 +459,8 @@ class IPMI
             begin
                 IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).end_with? 'enabled'
             rescue
-                # this command can fail on RMM3 when user is disabled
-                if enabled
+                # this command can fail on RMM3 when user is unnamed
+                if name == ''
                     raise
                 end
             end
@@ -468,10 +468,10 @@ class IPMI
 
         def sol= value
             begin
-            IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
+                IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
             rescue
-                # this command can fail on RMM3 when user is disabled
-                if enabled
+                # this command can fail on RMM3 when user is unnamed
+                if name == ''
                     raise
                 end
             end
