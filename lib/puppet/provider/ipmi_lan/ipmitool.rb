@@ -44,7 +44,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     # connect system resources to the ones, declared in Puppet
     def self.prefetch resources
         instances.each do |instance|
-            if resource = resources.find { |resource| resource[:channel] == instance.channel }
+            if resource = resources.values.find { |resource| resource[:channel] == instance.channel }
                 resource.provider = instance
             end
         end
