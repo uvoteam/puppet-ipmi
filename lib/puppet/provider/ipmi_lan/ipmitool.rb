@@ -22,7 +22,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :name               => lan.cid.to_s,
                 # XXX user-style strict checking?
                 :ensure             => (lan.ipaddr == '0.0.0.0') ? :absent : :present,
-                :channel            => lan.cid.to_s,
+                :channel            => lan.cid,
                 :auth_admin         => lan.auth[:admin].sort,
                 :auth_operator      => lan.auth[:operator].sort,
                 :auth_user          => lan.auth[:user].sort,
@@ -44,7 +44,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     # connect system resources to the ones, declared in Puppet
     def self.prefetch resources
         instances.each do |instance|
-            if resource = resources[instance.channel]
+            if resource = resources.find { |resource| resource[:channel] == instance.channel }
                 resource.provider = instance
             end
         end
@@ -114,6 +114,10 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                     end
                 end
         end
+    end
+
+    def default_channel
+        ipmi.lan.cid
     end
 
     def flush

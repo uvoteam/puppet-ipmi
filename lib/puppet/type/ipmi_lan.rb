@@ -8,6 +8,14 @@ Puppet::Type.newtype(:ipmi_lan) do
 
     ensurable
 
+    newparam(:name) do
+        desc 'Dummy title-holder parameter. Do not use.'
+
+        defaultto do
+            resource.title
+        end
+    end
+
     newparam(:channel, :namevar => true) do
         desc 'Channel ID (integer, namevar).'
 
@@ -18,6 +26,17 @@ Puppet::Type.newtype(:ipmi_lan) do
         munge do |value|
             value.to_i
         end
+
+        defaultto do
+            resource.provider.default_channel
+        end
+    end
+
+    def self.title_patterns
+        [
+            [ /^(\d)$/, [ [ :channel ] ] ],
+            [ /^(.*)$/, [ [ :name ] ] ],
+        ]
     end
 
     [:admin, :operator, :user, :callback].each do |role|
