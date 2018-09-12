@@ -68,7 +68,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.netmask                  = resource[:netmask]
             lan.defgw_ipaddr             = resource[:gateway]
             lan.bakgw_ipaddr             = resource[:backup_gateway]
-            lan.arp_enable               = resource[:arp_enable] != :false
+            lan.arp_respond              = resource[:arp_enable] != :false
             lan.arp_gratituous           = resource[:arp_enable] == :advertise
             lan.snmp                     = resource[:snmp_community]
             lan.sol.enabled              = resource[:sol_enable]
@@ -99,7 +99,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.netmask                  = '0.0.0.0'
             lan.defgw_ipaddr             = '0.0.0.0'
             lan.bakgw_ipaddr             = '0.0.0.0'
-            lan.arp_enable               = false
+            lan.arp_respond              = false
             lan.arp_gratituous           = false
             lan.snmp                     = 'PiecKek9Ob'
             lan.sol.enabled              = false
@@ -131,7 +131,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 lan.netmask                  = @property_hash[:netmask]                    if @property_hash.has_key? :netmask
                 lan.defgw_ipaddr             = @property_hash[:gateway]                    if @property_hash.has_key? :gateway
                 lan.bakgw_ipaddr             = @property_hash[:backup_gateway]             if @property_hash.has_key? :backup_gateway
-                lan.arp_enable               = (@property_hash[:arp_enable] != :false)     if @property_hash.has_key? :arp_enable
+                lan.arp_respond              = (@property_hash[:arp_enable] != :false)     if @property_hash.has_key? :arp_enable
                 lan.arp_gratituous           = (@property_hash[:arp_enable] == :advertise) if @property_hash.has_key? :arp_enable
                 lan.snmp                     = @property_hash[:snmp_community]             if @property_hash.has_key? :snmp_community
                 lan.sol.enabled              = @property_hash[:sol_enable]                 if @property_hash.has_key? :sol_enable
