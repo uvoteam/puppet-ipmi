@@ -460,22 +460,16 @@ class IPMI
             begin
                 IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).end_with? 'enabled'
             rescue
-                # this command can fail on RMM3 when user is unnamed
-                unless privilege == :no_access
+                # this command can fail on RMM3 when user have not been created yet
+                unless name == ''
                     raise
                 end
+                false
             end
         end
 
         def sol= value
-            begin
-                IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
-            rescue
-                # this command can fail on RMM3 when user is unnamed
-                unless privilege == :no_access
-                    raise
-                end
-            end
+            IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
         end
     end
 
