@@ -121,7 +121,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             user.name      = resource[:username]
             user.enabled   = true
             user.password  = resource[:password]
-            ipmi.lan_cids.each do |channel|
+            ipmi.lan_cids.each do |cid|
                 ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
                     user.privilege = resource[:"role_#{cid}"]
                     user.callin    = resource[:"callin_#{cid}"]
@@ -138,7 +138,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         ipmi.users.user(@property_hash[:userid]).tap do |user|
             user.name      = "disabled#{user.uid}"
             user.enabled   = false
-            ipmi.lan_cids.each do |channel|
+            ipmi.lan_cids.each do |cid|
                 ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
                     user.privilege = :no_access
                     user.callin    = false
