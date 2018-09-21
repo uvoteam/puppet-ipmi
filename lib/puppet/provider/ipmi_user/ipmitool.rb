@@ -57,7 +57,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 params[:"link_auth_#{cid}"] = user.link
                 params[:"ipmi_msg_#{cid}"]  = user.ipmi
                 params[:"sol_#{cid}"]       = user.sol
-                absent ||= user.privilege == :no_access  and
+                absent &&= user.privilege == :no_access  and
                            not user.callin               and
                            not user.link                 and
                            not user.ipmi                 and
@@ -118,7 +118,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def create
         ipmi.users.user(@property_hash[:userid]).tap do |user|
-            user.name      = resource[:username]
+            user.name      = resource[:username] unless user.name == resource[:username]
             user.enabled   = true
             user.password  = resource[:password]
             ipmi.lan_cids.each do |cid|
@@ -136,7 +136,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def destroy
         ipmi.users.user(@property_hash[:userid]).tap do |user|
-            user.name      = "disabled#{user.uid}"
+            user.name      = "disabled#{user.uid}" unless user.name == resource[:username]
             user.enabled   = false
             ipmi.lan_cids.each do |cid|
                 ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
