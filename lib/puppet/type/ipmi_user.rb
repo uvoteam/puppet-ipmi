@@ -65,25 +65,25 @@ Puppet::Type.newtype(:ipmi_user) do
         end
     end
 
-    newparameter(:role) do
+    newparam(:role) do
         desc 'Privilege level of this user (admin, operator, user, callback, no_access). Defaults to no_access.'
         newvalues(:admin, :operator, :user, :callback, :no_access)
         defaultto(:no_access)
     end
 
-    newparameter(:callin, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+    newparam(:callin, :boolean => true, :parent => Puppet::Parameter::Boolean) do
         desc 'Whether this user have the same rights during call-in session as during call-back session (modem-related).'
     end
 
-    newparameter(:link_auth, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+    newparam(:link_auth, :boolean => true, :parent => Puppet::Parameter::Boolean) do
         desc 'Permission for link auth (modem-related).'
     end
 
-    newparameter(:ipmi_msg, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+    newparam(:ipmi_msg, :boolean => true, :parent => Puppet::Parameter::Boolean) do
         desc 'Permission to send ipmi messages (whatever they are).'
     end
 
-    newparameter(:sol, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+    newparam(:sol, :boolean => true, :parent => Puppet::Parameter::Boolean) do
         desc 'Permission to use Serial Over LAN.'
     end
 
