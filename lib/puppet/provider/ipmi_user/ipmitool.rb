@@ -1,7 +1,7 @@
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 
-module IPMIResourceFilter
+module IPMIUserResourceFilter
     def assign_resources instances
         self.reject do |resource|
             instance = instances.find { |instance| yield instance, resource }
@@ -11,7 +11,7 @@ module IPMIResourceFilter
                 resource.provider = instance
                 instances.delete_if { |i| i.eql? instance }
             end
-        end.extend(IPMIResourceFilter)
+        end.extend(IPMIUserResourceFilter)
     end
 end
 
@@ -78,7 +78,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         fixed, variable = present.partition { |resource| resource[:userid] }
 
         # First we're placing any present resources with defined userid.
-        fixed.extend(IPMIResourceFilter)
+        fixed.extend(IPMIUserResourceFilter)
             .assign_resources(insts) { |instance, resource| instance.userid == resource[:userid] }
             .each do |resource|
                 fail("User slot with UID #{resource[:userid]} required for Ipmi_user[#{resource[:name]}] not found or already taken")
@@ -88,7 +88,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         # Then search for any absent resources, that we can reuse.
         # While at that, we try to preserve as much existing data as possible, thus three rules instead of one.
         # XXX check roles?
-        variable.extend(IPMIResourceFilter)
+        variable.extend(IPMIUserResourceFilter)
             .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
             .assign_resources(insts) { |instance, resource| instance.userid > 2 and instance.ensure == :absent }
             .assign_resources(insts) { |instance, resource| instance.userid > 2 and not instance.enable }
@@ -99,7 +99,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
         # After present resources, we assign absent resources with matching userid or username.
         # And any still unassigned resources we just delete, since there's no way to determine their positioning.
-        absent.extend(IPMIResourceFilter)
+        absent.extend(IPMIUserResourceFilter)
             .assign_resources(insts) { |instance, resource| instance.userid == resource[:userid] }
             .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
             .each do |resource|

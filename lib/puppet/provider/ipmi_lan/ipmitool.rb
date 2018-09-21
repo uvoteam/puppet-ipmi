@@ -1,6 +1,20 @@
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 
+module IPMILANResourceFilter
+    def assign_resources instances
+        self.reject do |resource|
+            instance = instances.find { |instance| yield instance, resource }
+
+            unless instance.nil?
+                IPMI.debug "Assigning #{instance.channel} to Ipmi_user[#{resource[:name]}]"
+                resource.provider = instance
+                instances.delete_if { |i| i.eql? instance }
+            end
+        end.extend(IPMILANResourceFilter)
+    end
+end
+
 Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     commands :ipmitoolcmd => 'ipmitool'
 
@@ -44,11 +58,21 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
 
     # connect system resources to the ones, declared in Puppet
     def self.prefetch resources
-        instances.each do |instance|
-            if resource = resources.values.find { |resource| resource[:channel] == instance.channel }
-                resource.provider = instance
+        insts           = instances
+        present, absent = resources.values.partition { |resource| resource.should(:ensure) == :present }
+
+        present.extend(IPMILANResourceFilter)
+            .assign_resources(insts) { |instance, resource| instance.channel == resource[:channel] }
+            .each do |resource|
+                fail("Requested LAN channel #{resource[:channel]} does not exist or is already taken")
             end
-        end
+
+        absent.extend(IPMILANResourceFilter)
+            .assign_resources(insts) { |instance, resource| instance.channel == resource[:channel] }
+            .each do |resource|
+                debug "Deleting absent resource Ipmi_lan[#{resource[:name]}]"
+                resource.remove
+            end
     end
 
     # create default property accessors
