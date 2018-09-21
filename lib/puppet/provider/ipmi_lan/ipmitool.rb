@@ -6,8 +6,9 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
 
     class <<self
         def ipmi
+            IPMI
             # XXX extremely ugly...
-            @ipmi ||= IPMI.tap { |obj| obj.ipmitoolcmd = proc { |*args| ipmitoolcmd *args } }
+            #@ipmi ||= IPMI.tap { |obj| obj.ipmitoolcmd = proc { |*args| ipmitoolcmd *args } }
         end
     end
 
@@ -69,7 +70,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.defgw_ipaddr             = resource[:gateway]
             lan.bakgw_ipaddr             = resource[:backup_gateway]
             lan.arp_respond              = resource[:arp_enable] != :false
-            lan.arp_gratituous           = resource[:arp_enable] == :advertise
+            lan.arp_generate             = resource[:arp_enable] == :advertise
             lan.snmp                     = resource[:snmp_community]
             lan.sol.enabled              = resource[:sol_enable]
             lan.sol.force_encryption     = resource[:sol_encryption]
@@ -100,7 +101,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.defgw_ipaddr             = '0.0.0.0'
             lan.bakgw_ipaddr             = '0.0.0.0'
             lan.arp_respond              = false
-            lan.arp_gratituous           = false
+            lan.arp_generate             = false
             lan.snmp                     = 'PiecKek9Ob'
             lan.sol.enabled              = false
             lan.sol.force_encryption     = true
@@ -132,7 +133,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 lan.defgw_ipaddr             = @property_hash[:gateway]                    if @property_hash.has_key? :gateway
                 lan.bakgw_ipaddr             = @property_hash[:backup_gateway]             if @property_hash.has_key? :backup_gateway
                 lan.arp_respond              = (@property_hash[:arp_enable] != :false)     if @property_hash.has_key? :arp_enable
-                lan.arp_gratituous           = (@property_hash[:arp_enable] == :advertise) if @property_hash.has_key? :arp_enable
+                lan.arp_generate             = (@property_hash[:arp_enable] == :advertise) if @property_hash.has_key? :arp_enable
                 lan.snmp                     = @property_hash[:snmp_community]             if @property_hash.has_key? :snmp_community
                 lan.sol.enabled              = @property_hash[:sol_enable]                 if @property_hash.has_key? :sol_enable
                 lan.sol.force_encryption     = @property_hash[:sol_encryption]             if @property_hash.has_key? :sol_encryption
