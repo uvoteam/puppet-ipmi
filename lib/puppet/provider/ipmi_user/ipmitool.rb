@@ -172,7 +172,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def flush
         unless @property_hash.empty?
             ipmi.users.user(@property_hash[:userid]).tap do |user|
-                user.name      = @property_hash[:username]     if @property_hash.has_key? :username
+                user.name      = @property_hash[:username]     if @property_hash.has_key? :username and @proxy_hash[:username] != user.name
                 user.enabled   = @property_hash[:enable]       if @property_hash.has_key? :enable
                 user.password  = @property_hash[:password], 20 if @property_hash.has_key? :password
                 ipmi.lan_cids.each do |cid|
