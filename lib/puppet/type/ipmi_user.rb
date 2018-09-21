@@ -1,11 +1,12 @@
 
 require 'puppet/property/boolean'
+require 'puppet/parameter/boolean'
 
 Puppet::Type.newtype(:ipmi_user) do
     @doc = <<-'DOC'
     This represents ipmi user.
-    You can optionally define userid and channel number, either as resource params, or as part of title:
-    "${user_name}:${user_id}@${channel_number}"
+    You can optionally define userid, either as resource param, or as part of title:
+    "${username}:${userid}"
     DOC
 
     # we add ensure parameter here only to be able to use resource purging.
@@ -29,28 +30,14 @@ Puppet::Type.newtype(:ipmi_user) do
         end
     end
 
-    newparam(:channel, :namevar => true) do
-        desc 'LAN Channel ID (integer, namevar). If not specified, first available LAN channel will be used.'
-        munge do |value|
-            value.to_i
-        end
-
-        defaultto do
-            resource.provider.default_channel
-        end
-    end
-
     newproperty(:username) do
         desc 'Name for this user (namevar)'
     end
 
     def self.title_patterns
         [
-            [ /^(\S*):(\d+)@(\d+)$/,  [ [ :username ], [ :userid ], [ :channel ] ] ],
             [ /^(\S*):(\d+)$/,        [ [ :username ], [ :userid ] ] ],
-            [ /^(\d+)@(\d+)$/,        [ [ :userid ], [ :channel ] ] ],
             [ /^(\d+)$/,              [ [ :userid ] ] ],
-            [ /^(\S*)@(\d+)$/,        [ [ :username ], [ :channel ] ] ],
             [ /^(\S*)$/,              [ [ :username ] ] ],
         ]
     end
@@ -59,33 +46,11 @@ Puppet::Type.newtype(:ipmi_user) do
         desc 'This defines if user should be enabled or disabled.'
     end
 
-    newproperty(:role) do
-        desc 'Privilege level of this user (admin, operator, user, callback, no_access). Defaults to no_access.'
-        newvalues(:admin, :operator, :user, :callback, :no_access)
-        defaultto(:no_access)
-    end
-
     newproperty(:immutable, :boolean => true, :parent => Puppet::Property::Boolean) do
         desc 'This read-only property indicates, if user name is marked as "fixed".'
         validate do |value|
             raise ArgumentError, 'IPMI does not allow to change username immutability'
         end
-    end
-
-    newproperty(:callin, :boolean => true, :parent => Puppet::Property::Boolean) do
-        desc 'Whether this user have the same rights during call-in session as during call-back session (modem-related).'
-    end
-
-    newproperty(:link_auth, :boolean => true, :parent => Puppet::Property::Boolean) do
-        desc 'Permission for link auth (modem-related).'
-    end
-
-    newproperty(:ipmi_msg, :boolean => true, :parent => Puppet::Property::Boolean) do
-        desc 'Permission to send ipmi messages (whatever they are).'
-    end
-
-    newproperty(:sol, :boolean => true, :parent => Puppet::Property::Boolean) do
-        desc 'Permission to use Serial Over LAN.'
     end
 
     newproperty(:password) do
@@ -97,6 +62,58 @@ Puppet::Type.newtype(:ipmi_user) do
 
         def insync? is
             provider.password_insync? should
+        end
+    end
+
+    newparameter(:role) do
+        desc 'Privilege level of this user (admin, operator, user, callback, no_access). Defaults to no_access.'
+        newvalues(:admin, :operator, :user, :callback, :no_access)
+        defaultto(:no_access)
+    end
+
+    newparameter(:callin, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+        desc 'Whether this user have the same rights during call-in session as during call-back session (modem-related).'
+    end
+
+    newparameter(:link_auth, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+        desc 'Permission for link auth (modem-related).'
+    end
+
+    newparameter(:ipmi_msg, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+        desc 'Permission to send ipmi messages (whatever they are).'
+    end
+
+    newparameter(:sol, :boolean => true, :parent => Puppet::Parameter::Boolean) do
+        desc 'Permission to use Serial Over LAN.'
+    end
+
+    [*(0..11), 15].each do |cid|
+        feature :"lan_channel_#{cid}", "IPMI have LAN channel with ID #{cid}"
+
+        newproperty(:"role_#{cid}", :required_features => :"lan_channel_#{cid}") do
+            desc "Privilege level of this user on channel #{cid}."
+            newvalues(:admin, :operator, :user, :callback, :no_access)
+            defaultto { resource[:role] }
+        end
+
+        newproperty(:"callin_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+            desc "Permission for call-in on channel #{cid}."
+            defaultto { resource[:callin] }
+        end
+
+        newproperty(:"link_auth_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+            desc "Permission for link auth on channel #{cid}."
+            defaultto { resource[:link_auth] }
+        end
+
+        newproperty(:"ipmi_msg_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+            desc "Permission to send ipmi messages on channel #{cid}."
+            defaultto { resource[:ipmi_msg] }
+        end
+
+        newproperty(:"sol_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+            desc "Permission to use Serial Over LAN on channel #{cid}."
+            defaultto { resource[:sol] }
         end
     end
 end

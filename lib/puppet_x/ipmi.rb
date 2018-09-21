@@ -1,4 +1,7 @@
 
+require 'puppet/util'
+require 'puppet/util/execution'
+
 #
 #  Container class without instance
 #
@@ -47,7 +50,7 @@ class IPMI
         #
 
         # This is kinda ugly, we provide ipmitoolcmd ipmlementation outside
-        attr_accessor :ipmitoolcmd
+#        attr_accessor :ipmitoolcmd
 
         def ipmitool args, type = :tuples, labels = nil
             @cache ||= {}
@@ -56,7 +59,8 @@ class IPMI
                 begin
                     IPMI.debug "running: #{commandline}"
                     begin
-                        text = IPMI.ipmitoolcmd.call args
+                        # XXX this is supposedly protected by provider's 'command' constraint
+                        text = Puppet::Util::Execution.execute([Puppet::Util.which('ipmitool')] + args)
                     rescue Exception => e
                         @cache[commandline] = e.message
                         raise
@@ -78,7 +82,7 @@ class IPMI
         #  Global system state objects
         #
 
-        def lan_channels
+        def lan_cids
             [*(0..11), 15]
                 .select do |cid|
                     # there's no way to detect which channels exist, thus we're ignoring ipmitool fails on absent ones
@@ -88,7 +92,10 @@ class IPMI
                         nil
                     end
                 end
-                .map { |cid| IPMI.lan cid }
+        end
+
+        def lan_channels
+            lan_cids.map { |cid| IPMI.lan cid }
         end
 
         def lan cid = IPMI.lan_channels.first.cid
@@ -495,6 +502,15 @@ class IPMI
 
         def user uid
             @user[uid] ||= User.new(cid, IPMI.ipmitool(['channel', 'getaccess', cid], :multi_tuples)[uid])
+        end
+
+        # XXX
+        def each
+            (1..maximum_users).map { |uid| user uid }.each
+        end
+
+        def map
+            (1..maximum_users).map { |uid| user uid }.map
         end
     end
 end
