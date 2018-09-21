@@ -17,6 +17,24 @@ class ipmi (
     create_resources('ipmi::user', $users)
 
     if $purge_users {
+        # we cannot properly set special users 1 and 2 to be disabled
+        # so we will treat them differently
+        ipmi_user { '1':
+            userid    => 1,
+            enable    => false,
+            callin    => false,
+            link_auth => false,
+            ipmi_msg  => false,
+            role      => no_access,
+            sol       => false,
+        }
+
+        ipmi_user { '2':
+            userid    => 2,
+            enable    => false,
+            sol       => false,
+        }
+
         resources { 'ipmi_user':
             purge => true,
         }
