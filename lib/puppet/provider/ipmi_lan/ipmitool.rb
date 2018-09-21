@@ -41,7 +41,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :auth_admin         => lan.auth[:admin].sort,
                 :auth_operator      => lan.auth[:operator].sort,
                 :auth_user          => lan.auth[:user].sort,
-                :auth_callabck      => lan.auth[:callback].sort,
+                :auth_callback      => lan.auth[:callback].sort,
                 :address            => lan.ipaddr,
                 :netmask            => lan.netmask,
                 :gateway            => lan.defgw_ipaddr,
