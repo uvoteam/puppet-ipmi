@@ -465,7 +465,7 @@ class IPMI
 
         def sol
             begin
-                IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).end_with? 'enabled'
+                IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).strip.end_with? 'enabled'
             rescue
                 # this command can fail on RMM3 when user have not been created yet
                 unless privilege == :no_access

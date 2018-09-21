@@ -136,7 +136,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def destroy
         ipmi.users.user(@property_hash[:userid]).tap do |user|
-            user.name      = "disabled#{user.uid}" unless user.name == resource[:username]
+            user.name      = "disabled#{user.uid}" unless user.name == "disabled#{user.uid}"
             user.enabled   = false
             ipmi.lan_cids.each do |cid|
                 ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
