@@ -51,7 +51,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                      not user.enabled
 
             ipmi.lan_cids.each do |cid|
-                user = ipmi.users(cid).user(uid)
+                user = ipmi.users(cid).user(user.uid)
                 params[:"role_#{cid}"]      = user.privilege
                 params[:"callin_#{cid}"]    = user.callin
                 params[:"link_auth_#{cid}"] = user.link
@@ -131,6 +131,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 end
             end
         end
+        @property_hash={}
     end
 
     def destroy
@@ -147,6 +148,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 end
             end
         end
+        @property_hash={}
     end
 
     def password_insync? pass

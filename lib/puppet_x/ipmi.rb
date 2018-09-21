@@ -505,12 +505,12 @@ class IPMI
         end
 
         # XXX
-        def each
-            (1..maximum_users).map { |uid| user uid }.each
+        def each &block
+            (1..maximum_users).map { |uid| user uid }.each &block
         end
 
-        def map
-            (1..maximum_users).map { |uid| user uid }.map
+        def map &block
+            (1..maximum_users).map { |uid| user uid }.map &block
         end
     end
 end

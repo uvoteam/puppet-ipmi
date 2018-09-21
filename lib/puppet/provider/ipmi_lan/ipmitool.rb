@@ -86,6 +86,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                     end
                 end
         end
+        @property_hash = {}
     end
 
     def destroy
@@ -115,6 +116,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                     end
                 end
         end
+        @property_hash = {}
     end
 
     def default_channel
