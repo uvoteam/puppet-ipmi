@@ -2,7 +2,6 @@
 define ipmi::user (
     Optional[String]  $username  = undef,
     Optional[Integer] $user_id   = undef,
-    Optional[Integer] $channel   = undef,
     Boolean           $enable    = true,
     Optional[String]  $password  = undef,
     Ipmi::Role        $role      = $enable ? {
@@ -17,7 +16,6 @@ define ipmi::user (
     ipmi_user { $title:
         username  => $username,
         userid    => $user_id,
-        channel   => $channel,
         enable    => $enable,
         password  => $password,
         role      => $role,

@@ -47,24 +47,24 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 :password  => '*hidden*',
             }
 
-            ensure = user.name == "disabled#{user.uid}" and
+            absent = user.name == "disabled#{user.uid}" and
                      not user.enabled
 
             ipmi.lan_cids.each do |cid|
                 user = ipmi.users(cid).user(uid)
-                params[:"role_#{cid}"]      => user.privilege,
-                params[:"callin_#{cid}"]    => user.callin,
-                params[:"link_auth_#{cid}"] => user.link,
-                params[:"ipmi_msg_#{cid}"]  => user.ipmi,
-                params[:"sol_#{cid}"]       => user.sol,
-                ensure ||= user.privilege == :no_access  and
+                params[:"role_#{cid}"]      = user.privilege
+                params[:"callin_#{cid}"]    = user.callin
+                params[:"link_auth_#{cid}"] = user.link
+                params[:"ipmi_msg_#{cid}"]  = user.ipmi
+                params[:"sol_#{cid}"]       = user.sol
+                absent ||= user.privilege == :no_access  and
                            not user.callin               and
                            not user.link                 and
                            not user.ipmi                 and
                            not user.sol
             end
 
-            params[:ensure] = ensure ? :absent : :present
+            params[:ensure] = absent ? :absent : :present
 
             new(params)
         end
