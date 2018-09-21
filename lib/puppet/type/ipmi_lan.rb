@@ -100,7 +100,7 @@ Puppet::Type.newtype(:ipmi_lan) do
         desc 'Force authentication for SOL'
     end
 
-    newproperty(:ciphers, :array_matchisg => :all) do
+    newproperty(:ciphers, :array_matching => :all) do
         desc 'List of ciphers to enable'
 
         validate do |value|
@@ -111,7 +111,7 @@ Puppet::Type.newtype(:ipmi_lan) do
             value.to_i
         end
 
-        def insync is
+        def insync? is
             (is - should).empty?
         end
     end

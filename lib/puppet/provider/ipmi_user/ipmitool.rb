@@ -42,7 +42,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 :name      => "#{user.name}:#{user.uid}",
                 :username  => user.name,
                 :enable    => user.enabled,
-                :userid    => uid,
+                :userid    => user.uid,
                 :immutable => user.fixed_name,
                 :password  => '*hidden*',
             }
