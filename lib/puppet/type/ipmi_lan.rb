@@ -30,7 +30,7 @@ Puppet::Type.newtype(:ipmi_lan) do
         end
 
         defaultto do
-            resource.provider.default_channel.to_s
+            resource.provider and resource.provider.default_channel.to_s
         end
     end
 
