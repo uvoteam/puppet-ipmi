@@ -32,37 +32,37 @@ Example:
 ```puppet
 class { 'ipmi':
     # disable any existing IPMI users, not managed by puppet
-	purge_users => true,
+    purge_users => true,
     # disable any other LAN channels, that are not managed by puppet
-	purge_lans  => true,
+    purge_lans  => true,
     # managed users hash
-	users => {
-		'test1' => {
-			role     => operator,
-			password => 'test12',
-		},
-		'test2' => {
-			role     => admin,
-			password => 'test14',
-		},
+    users => {
+        'test1' => {
+            role     => operator,
+            password => 'test12',
+        },
+        'test2' => {
+            role     => admin,
+            password => 'test14',
+        },
         # you can set specific user ID by separating it with colon
-		'test3:5' => {
-			password => 'test13',
-		},
+        'test3:5' => {
+            password => 'test13',
+        },
         # ...or just specify it as a parameter on it's own
-		'test4' => {
+        'test4' => {
             userid   => 6,
-			password => 'test13',
-		},
-	},
+            password => 'test13',
+        },
+    },
     # managed lan hash
-	lans => {
-		'privnet' => {
-			address => '192.168.1.10',
-			netmask => '255.255.255.0',
-			gateway => '192.168.1.1',
-		},
-	}
+    lans => {
+        'privnet' => {
+            address => '192.168.1.10',
+            netmask => '255.255.255.0',
+            gateway => '192.168.1.1',
+        },
+    }
 }
 ```
 
