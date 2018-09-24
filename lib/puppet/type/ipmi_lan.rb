@@ -23,12 +23,14 @@ Puppet::Type.newtype(:ipmi_lan) do
             value.is_a? Integer or /^\d+$/ =~ value
         end
 
+        # This must be a string value to be able to serve as an aliased resource title.
+        # And that is required for purging to work.
         munge do |value|
-            value.to_i
+            value.to_s
         end
 
         defaultto do
-            resource.provider.default_channel
+            resource.provider.default_channel.to_s
         end
     end
 

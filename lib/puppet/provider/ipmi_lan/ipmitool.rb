@@ -37,7 +37,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :name               => lan.cid.to_s,
                 # XXX user-style strict checking?
                 :ensure             => (lan.ipaddr == '0.0.0.0') ? :absent : :present,
-                :channel            => lan.cid,
+                :channel            => lan.cid.to_s,
                 :auth_admin         => lan.auth[:admin].sort,
                 :auth_operator      => lan.auth[:operator].sort,
                 :auth_user          => lan.auth[:user].sort,
@@ -84,7 +84,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def create
-        ipmi.lan(@property_hash[:channel]).tap do |lan|
+        ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
             lan.auth                     =
                 [:admin, :operator, :user, :callback].map do |role|
                     [ role, resource[:"auth_#{role}"] ] if resource[:"auth_#{role}"]
@@ -114,7 +114,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def destroy
-        ipmi.lan(@property_hash[:channel]).tap do |lan|
+        ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
             lan.auth                     = {
                 :admin    => [ :md5 ],
                 :operator => [ :md5 ],
@@ -149,7 +149,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
 
     def flush
         unless @property_hash.empty?
-            ipmi.lan(@property_hash[:channel]).tap do |lan|
+            ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
                 lan.auth                     =
                     [:admin, :operator, :user, :callback].map do |role|
                         [ role, @property_hash[:"auth_#{role}"] ] if @property_hash[:"auth_#{role}"]
