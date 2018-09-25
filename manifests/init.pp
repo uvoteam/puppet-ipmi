@@ -7,6 +7,13 @@ class ipmi (
   Boolean          $service     = false,
   Boolean          $ipmievd     = false,
   Boolean          $watchdog    = false,
+
+  # Compatibility with older code
+  Hash[String,Any]                  $networks               = {},
+  # XXX unsupported!
+  Hash[String,Any]                  $snmps                  = {},
+  Optional[Stdlib::Ensure::Service] $service_ensure         = undef,
+  Optional[Stdlib::Ensure::Service] $ipmievd_service_ensure = undef,
 ) {
     include ::ipmi::install
     include ::ipmi::config
@@ -15,6 +22,8 @@ class ipmi (
 
     create_resources('ipmi::lan',  $lans)
     create_resources('ipmi::user', $users)
+    # compatibility wrapper
+    create_resources('ipmi::networks', $networks)
 
     if $purge_users {
         # we cannot properly set special users 1 and 2 to be disabled
