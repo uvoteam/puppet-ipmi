@@ -23,7 +23,7 @@ class ipmi (
     create_resources('ipmi::lan',  $lans)
     create_resources('ipmi::user', $users)
     # compatibility wrapper
-    create_resources('ipmi::networks', $networks)
+    create_resources('ipmi::network', $networks)
 
     if $purge_users {
         # we cannot properly set special users 1 and 2 to be disabled
