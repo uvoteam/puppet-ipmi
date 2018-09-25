@@ -304,7 +304,7 @@ class IPMI
             begin
                 set 'arp respond', value ? 'on' : 'off'
             rescue Puppet::ExecutionFailure => err
-                unless err.exit_status == 1
+                unless / returned 1: / =~ err.message
                     raise
                 end
             end
@@ -319,7 +319,7 @@ class IPMI
             begin
                 set 'arp generate', value ? 'on' : 'off'
             rescue Puppet::ExecutionFailure => err
-                unless err.exit_status == 1
+                unless / returned 1: / =~ err.message
                     raise
                 end
             end
