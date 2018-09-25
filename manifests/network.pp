@@ -7,13 +7,7 @@ define ipmi::network (
     Enum[dhcp,static] $type        = dhcp,
     Integer           $lan_channel = 1,
 ){
-    $ensure = $ip ? {
-        '0.0.0.0' => absent,
-        default   => present,
-    }
-
     ipmi::lan { "${title}":
-        ensure  => $ensure,
         channel => $lan_channel,
         address => $ip,
         netmask => $netmask,
