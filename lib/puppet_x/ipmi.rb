@@ -304,7 +304,7 @@ class IPMI
             begin
                 set 'arp respond', value ? 'on' : 'off'
             rescue Puppet::ExecutionFailure => err
-                unless / returned 1: / =~ err.message
+                unless / returned 1: (?:Enabling|Disabling) BMC-generated ARP responses\Z/ =~ err.message
                     raise
                 end
             end
@@ -319,7 +319,7 @@ class IPMI
             begin
                 set 'arp generate', value ? 'on' : 'off'
             rescue Puppet::ExecutionFailure => err
-                unless / returned 1: / =~ err.message
+                unless / returned 1: (?:Enabling|Disabling) BMC-generated Gratuitous ARPs\Z/ =~ err.message
                     raise
                 end
             end
