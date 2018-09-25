@@ -49,9 +49,6 @@ class IPMI
         #  Command
         #
 
-        # This is kinda ugly, we provide ipmitoolcmd ipmlementation outside
-#        attr_accessor :ipmitoolcmd
-
         def ipmitool args, type = :tuples, labels = nil
             @cache ||= {}
             commandline = "ipmitool #{args.join ' '}"
@@ -303,7 +300,14 @@ class IPMI
         end
 
         def arp_respond= value
-            set 'arp respond', value ? 'on' : 'off'
+            # this always returns 1 on supermicro boards
+            begin
+                set 'arp respond', value ? 'on' : 'off'
+            rescue Puppet::ExecutionFailure => err
+                unless err.exit_status == 1
+                    raise
+                end
+            end
         end
 
         def arp_generate
@@ -311,7 +315,14 @@ class IPMI
         end
 
         def arp_generate= value
-            set 'arp generate', value ? 'on' : 'off'
+            # this always returns 1 on supermicro borads
+            begin
+                set 'arp generate', value ? 'on' : 'off'
+            rescue Puppet::ExecutionFailure => err
+                unless err.exit_status == 1
+                    raise
+                end
+            end
         end
 
         def cipher_privs
