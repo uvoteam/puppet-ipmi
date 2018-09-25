@@ -9,8 +9,7 @@ require 'puppet/util/execution'
 class IPMI
     class <<self
         def debug *args
-            # FIXME
-            Puppet::Util::Log.create({ level: :warning, source: 'Lib[ipmi]', message: args.join(' ') })
+            Puppet::Util::Log.create({ level: :debug, source: 'Lib[ipmi]', message: args.join(' ') })
         end
 
         #
