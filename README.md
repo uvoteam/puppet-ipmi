@@ -18,7 +18,19 @@ Notes:
    1) intel rmm3 refuses to assign empty names to users.
    2) intel rmm3 refuses to set parameters on not yet created users, thus you need to set name first.
  * Intel RMM3 refuses to have several users with the same name.
- * **BUG** intel rmm3 authenticator dies, when you assign any number of spaces as a username. And won't let you change the name back. Basically, this operation bricks your ipmi.
+ * **BUG** on Intel RMM, when you assign any number of spaces as a username, it freaks out and won't allow you to change user name anymore.
+   So, such user slot is effectively lost (maybe it can be recovered by reflashing with factory reset, but I haven't tried it yet).
+
+Compatibility
+-------------
+
+Compatibility was not of a prime concern to me, but I have added handling of
+old parameter names, where it seemed feasible. Some parameters are not
+supported currently:
+
+ * ipmi::snmps (absent)
+ * ipmi::network::type (noop)
+ * lost facts ipmiX_ipaddress_source and ipmiX_macaddress
 
 Basic operation
 ---------------
