@@ -48,7 +48,7 @@ class IPMI
         #  Command
         #
 
-        def ipmitool args, type = :tuples, labels = nil
+        def ipmitool args, options = {}
             @cache ||= {}
             commandline = "ipmitool #{args.join ' '}"
             @cache[commandline] ||=
@@ -56,18 +56,21 @@ class IPMI
                     IPMI.debug "running: #{commandline}"
                     begin
                         # XXX this is supposedly protected by provider's 'command' constraint
-                        text = Puppet::Util::Execution.execute([Puppet::Util.which('ipmitool')] + args)
+                        text = Puppet::Util::Execution.execute([Puppet::Util.which('ipmitool')] + args, {
+                            failonfail: (not options[:can_fail]),
+                            combine:    (not options[:drop_stderr]),
+                        })
                     rescue Exception => e
                         @cache[commandline] = e.message
                         raise
                     end
-                    case type
+                    case options[:type]
                     when :multi_tuples
                         IPMI.parse_sectioned_colon_tuples text
-                    when :tuples
+                    when :tuples, nil
                         IPMI.parse_colon_tuples text
                     when :csv
-                        IPMI.parse_csv text, labels
+                        IPMI.parse_csv text, options[:labels]
                     when :plain
                         text
                     end
@@ -82,11 +85,7 @@ class IPMI
             [*(0..11), 15]
                 .select do |cid|
                     # there's no way to detect which channels exist, thus we're ignoring ipmitool fails on absent ones
-                    begin
-                        IPMI.ipmitool(['channel', 'info', ('0x%x' % cid)], :tuples).fetch(:channel_medium_type, []).first == '802.3 LAN'
-                    rescue
-                        nil
-                    end
+                    IPMI.ipmitool(['channel', 'info', ('0x%x' % cid)], { can_fail: true }).fetch(:channel_medium_type, []).first == '802.3 LAN'
                 end
         end
 
@@ -121,16 +120,17 @@ class IPMI
             end
 
             def get field
-                IPMI.ipmitool(['sol', 'info', cid, '-c'], :csv, [
+                # information messages may clutter output and confuse the parser, thus we're dropping stderr
+                IPMI.ipmitool(['sol', 'info', cid, '-c'], { drop_stderr: true, type: :csv, labels: [
                     :set_in_progress, :enabled, :force_encryption, :force_authentication,
                     :privilege_level, :character_accumulate_level, :character_send_threshold,
                     :retry_count, :retry_interval, :volatile_bit_rate, :non_volatile_bit_rate,
                     :payload_channel, :payload_port
-                ]).first.fetch(field, [])
+                ]}).first.fetch(field, [])
             end
 
             def set field, value
-                IPMI.ipmitool(['sol', 'set', field.to_s.tr('_', '-'), value, cid], :plain)
+                IPMI.ipmitool(['sol', 'set', field.to_s.tr('_', '-'), value, cid], { type: :plain })
             end
 
             #
@@ -221,7 +221,7 @@ class IPMI
         end
 
         def get_all field
-            IPMI.ipmitool(['lan', 'print', cid], :tuples).fetch(field, [])
+            IPMI.ipmitool(['lan', 'print', cid]).fetch(field, [])
         end
 
         def get field
@@ -229,7 +229,7 @@ class IPMI
         end
 
         def set field, value
-            IPMI.ipmitool(['lan', 'set', cid, field.to_s.split, value], :plain)
+            IPMI.ipmitool(['lan', 'set', cid, field.to_s.split, value], { type: :plain })
         end
 
         #
@@ -396,7 +396,7 @@ class IPMI
         end
 
         def set field, value
-            IPMI.ipmitool(['channel', 'setaccess', cid, uid, "#{field}=#{value}"], :plain)
+            IPMI.ipmitool(['channel', 'setaccess', cid, uid, "#{field}=#{value}"], { type: :plain })
         end
 
         #
@@ -413,7 +413,7 @@ class IPMI
         end
 
         def name= value
-            IPMI.ipmitool(['user', 'set', 'name', uid, value], :plain)
+            IPMI.ipmitool(['user', 'set', 'name', uid, value], { type: :plain })
         end
 
         # read-only property
@@ -423,12 +423,12 @@ class IPMI
 
         # no getter method, we can only check if provided password matches the stored value
         def password? value, length = 16
-            IPMI.ipmitool(['user', 'test', uid, length, value], :plain)
+            IPMI.ipmitool(['user', 'test', uid, length, value], { type: :plain })
         end
 
         def password= args
             value, length = args.is_a?(Array) ? args : [args, 16]
-            IPMI.ipmitool(['user', 'set', 'password', uid, value, length], :plain)
+            IPMI.ipmitool(['user', 'set', 'password', uid, value, length], { type: :plain })
         end
 
         def callin
@@ -470,12 +470,12 @@ class IPMI
         end
 
         def enabled= value
-            IPMI.ipmitool(['user', value ? 'enable' : 'disable', uid], :plain)
+            IPMI.ipmitool(['user', value ? 'enable' : 'disable', uid], { type: :plain })
         end
 
         def sol
             begin
-                IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], :plain).strip.end_with? 'enabled'
+                IPMI.ipmitool(['sol', 'payload', 'status', cid, uid], { type: :plain }).strip.end_with? 'enabled'
             rescue
                 # this command can fail on RMM3 when user have not been created yet
                 unless privilege == :no_access
@@ -486,7 +486,7 @@ class IPMI
         end
 
         def sol= value
-            IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], :plain)
+            IPMI.ipmitool(['sol', 'payload', value ? 'enable' : 'disable', cid, uid], { type: :plain })
         end
     end
 
@@ -499,7 +499,7 @@ class IPMI
         end
 
         def get field
-            IPMI.ipmitool(['channel', 'getaccess', cid], :multi_tuples).first.fetch(field, []).first
+            IPMI.ipmitool(['channel', 'getaccess', cid], { type: :multi_tuples }).first.fetch(field, []).first
         end
 
         def maximum_users
@@ -511,7 +511,7 @@ class IPMI
         end
 
         def user uid
-            @user[uid] ||= User.new(cid, IPMI.ipmitool(['channel', 'getaccess', cid], :multi_tuples)[uid])
+            @user[uid] ||= User.new(cid, IPMI.ipmitool(['channel', 'getaccess', cid], { type: :multi_tuples })[uid])
         end
 
         # XXX
