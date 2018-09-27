@@ -6,11 +6,13 @@ define ipmi::lan (
     Ipmi::Ipaddr          $gateway,
     Ipmi::Ipaddr          $backup_gateway     = '0.0.0.0',
     Ipmi::Arp             $arp                = true,
-    Optional[String]      $snmp               = undef,
+    # just a random string to override the default value
+    Optional[String]      $snmp               = 'WabNuojV',
     Boolean               $sol                = false,
     Boolean               $sol_encryption     = true,
     Boolean               $sol_authentication = true,
-    Array[Integer]        $ciphers            = [3, 8, 12],
+    # this needs overrides on per-vendor basis, so, we lookup this parameter.
+    Array[Integer]        $ciphers            = lookup(['ipmi::lan::ciphers', "ipmi::lan::${title}::ciphers"], { default_value => [ 3, 8, 12 ] }),
     Array[Ipmi::Authtype] $auth_admin         = [ md5 ],
     Array[Ipmi::Authtype] $auth_operator      = [ md5 ],
     Array[Ipmi::Authtype] $auth_user          = [ md5 ],

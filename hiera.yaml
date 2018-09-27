@@ -2,8 +2,10 @@
 version: 5
 hierarchy:
     - name: Old redhat override
-      path: "%{osfamily}-%{operatingsystemmajrelease}.yaml"
+      path: "os/%{osfamily}-%{operatingsystemmajrelease}.yaml"
     - name: Common os settings
-      path: "%{osfamily}.yaml"
+      path: "os/%{osfamily}.yaml"
+    - name: Hardware manufacturer specific settings
+      path: "hw/%{boardmanufacturer}.yaml"
     - name: Static commons
       path: common.yaml

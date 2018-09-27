@@ -1,0 +1,6 @@
+---
+lookup_options:
+    # it is common feat to store plaintext passwords elsewhere than in hiera,
+    # thus we deep-merge users parameter.
+    ipmi::users:
+        merge: deep
