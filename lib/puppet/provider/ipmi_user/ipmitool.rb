@@ -57,11 +57,11 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 params[:"link_auth_#{cid}"] = user.link
                 params[:"ipmi_msg_#{cid}"]  = user.ipmi
                 params[:"sol_#{cid}"]       = user.sol
-                absent &&= user.privilege == :no_access  and
-                           not user.callin               and
-                           not user.link                 and
-                           not user.ipmi                 and
-                           not user.sol
+                absent &&= (user.privilege == :no_access  and
+                            not user.callin               and
+                            not user.link                 and
+                            not user.ipmi                 and
+                            not user.sol)
             end
 
             params[:ensure] = absent ? :absent : :present
