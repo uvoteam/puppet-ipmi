@@ -13,7 +13,9 @@ The ideas behind this implementation:
 * UID is not important, it should be chosen automatically by the system.
 * Channel ID on the other hand is quite important and should be specified explicitly.
 
-Notes:
+Notes
+-----
+
  * When making user 'absent' we're assigning it non-empty name 'disabled${uid}', because
    1) intel rmm3 refuses to assign empty names to users.
    2) intel rmm3 refuses to set parameters on not yet created users, thus you need to set name first.
@@ -22,7 +24,7 @@ Notes:
    So, such user slot is effectively lost (maybe it can be recovered by reflashing with factory reset, but I haven't tried it yet).
  * **BUG** On Dell iDRAC 7 user id 16 cannot be enabled/disabled via ipmitool.
  * **WARNING** On Dell iDRAC 7 creating administrative user from ipmitool does not give him access to web interface!
- * **QUIRK** On Dell iDRAC 6 user 'enabled' property is equal to both link_auth and ipmi_msg set at the same time.
+ * On Dell iDRAC 6 user 'enabled' property is equal to both link_auth and ipmi_msg set at the same time.
    Since I could find no way to determine iDRAC version lest listing all mobos/firmware combinations, I have
    updated default 'ipmi_msg' value for all Dell boards to be true.
 
@@ -238,6 +240,7 @@ Force authentication in SOL on this channel.
 ### ciphers
 
 Sets a list of allowed ciphers to use. Recommended set is [3, 8, 12].
+**Note**: IPMI v1.5 does not support ciphers, thus this parameter is noop on such platforms (but will print warning).
 
 Contribution
 ============

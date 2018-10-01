@@ -81,6 +81,14 @@ class IPMI
         #  Global system state objects
         #
 
+        def version
+            Gem::Version.new(IPMI.ipmitool(['mc', 'info']).fetch(:impi_version).first)
+        end
+
+        def has_ipmi_2?
+            IPMI.version.segments.first >= 2
+        end
+
         def lan_cids
             [*(0..11), 15]
                 .select do |cid|

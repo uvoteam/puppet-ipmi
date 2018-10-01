@@ -33,7 +33,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     # provider stuff
     def self.instances
         ipmi.lan_channels.map do |lan|
-            new(
+            params = {
                 :name               => lan.cid.to_s,
                 # XXX user-style strict checking?
                 :ensure             => (lan.ipaddr == '0.0.0.0') ? :absent : :present,
@@ -51,8 +51,13 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :sol_enable         => lan.sol.enabled,
                 :sol_encryption     => lan.sol.force_encryption,
                 :sol_authentication => lan.sol.force_authentication,
-                :ciphers            => lan.cipher_privs.each_with_index.map { |priv, index| (priv.nil? or priv == :no_access) ? nil : index }.compact,
-            )
+            }
+
+            if IPMI.has_ipmi_2?
+                params[:ciphers] = lan.cipher_privs.each_with_index.map { |priv, index| (priv.nil? or priv == :no_access) ? nil : index }.compact
+            end
+
+            new(params)
         end
     end
 
@@ -99,16 +104,18 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.sol.enabled              = resource[:sol_enable]
             lan.sol.force_encryption     = resource[:sol_encryption]
             lan.sol.force_authentication = resource[:sol_authentication]
-            lan.cipher_privs             =
-                lan.cipher_privs.each_with_index.map do |priv, index|
-                    unless priv.nil?
-                        if resource[:ciphers].include?(index)
-                            :admin
-                        else
-                            :no_access
+            if IPMI.has_ipmi_2?
+                lan.cipher_privs         =
+                    lan.cipher_privs.each_with_index.map do |priv, index|
+                        unless priv.nil?
+                            if resource[:ciphers].include?(index)
+                                :admin
+                            else
+                                :no_access
+                            end
                         end
                     end
-                end
+            end
         end
         @property_hash = {}
     end
@@ -131,14 +138,16 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             lan.sol.enabled              = false
             lan.sol.force_encryption     = true
             lan.sol.force_authentication = true
-            lan.cipher_privs             =
-                lan.cipher_privs.each_with_index.map do |priv, index|
-                    if [3, 8, 12].include? index
-                        :admin
-                    else
-                        :no_access
+            if IPMI.has_ipmi_2?
+                lan.cipher_privs         =
+                    lan.cipher_privs.each_with_index.map do |priv, index|
+                        if [3, 8, 12].include? index
+                            :admin
+                        else
+                            :no_access
+                        end
                     end
-                end
+            end
         end
         @property_hash = {}
     end
@@ -165,14 +174,18 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 lan.sol.force_encryption     = @property_hash[:sol_encryption]             if @property_hash.has_key? :sol_encryption
                 lan.sol.force_authentication = @property_hash[:sol_authentication]         if @property_hash.has_key? :sol_authentication
                 if @property_hash.has_key? :ciphers
-                    lan.cipher_privs =
-                        lan.cipher_privs.each_with_index.map do |priv, index|
-                            if @property_hash[:ciphers].include?(index)
-                                :admin
-                            else
-                                :no_access
+                    if IPMI.has_ipmi_2?
+                        lan.cipher_privs =
+                            lan.cipher_privs.each_with_index.map do |priv, index|
+                                if @property_hash[:ciphers].include?(index)
+                                    :admin
+                                else
+                                    :no_access
+                                end
                             end
-                        end
+                    else
+                        Puppet.warning("This IPMI uses specification v#{IPMI.version} and does not support settings ciphers")
+                    end
                 end
             end
         end
