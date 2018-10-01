@@ -82,7 +82,7 @@ class IPMI
         #
 
         def version
-            Gem::Version.new(IPMI.ipmitool(['mc', 'info']).fetch(:impi_version).first)
+            Gem::Version.new(IPMI.ipmitool(['mc', 'info']).fetch(:ipmi_version).first)
         end
 
         def has_ipmi_2?
