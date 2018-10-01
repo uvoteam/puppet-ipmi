@@ -1,0 +1,4 @@
+---
+# we're setting ipmi_msg to true on Dells by default because of iDRAC6's 'enable' behaviour
+# to avoid flip-flops when 'ipmi_msg' unsets 'enable', and 'enable' sets 'ipmi_msg'.
+ipmi::user::ipmi_msg: true

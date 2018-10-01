@@ -7,7 +7,7 @@ define ipmi::user (
     Optional[Ipmi::Role] $role      = undef,
     Boolean              $callin    = false,
     Boolean              $link_auth = true,
-    Boolean              $ipmi_msg  = false,
+    Boolean              $ipmi_msg  = lookup(['ipmi::user::ipmi_msg', "ipmi::user::${username}::ipmi_msg"], { default_value => false}),
     Boolean              $sol       = false,
 
     # Compatibility with previous code

@@ -465,8 +465,13 @@ class IPMI
         end
 
         def enabled
-            # XXX will be missing in output with ipmitool < 1.8.18
-            get(:enable_status) == 'enabled'
+            # XXX this field will be missing in output with ipmitool < 1.8.18
+            if get(:enable_status) == 'unknown'
+                # on Dell iDRAC 6 this field is 'unknown', but user enable/disable operotion switches link&ipmi simultaneously
+                link and ipmi
+            else
+                get(:enable_status) == 'enabled'
+            end
         end
 
         def enabled= value
