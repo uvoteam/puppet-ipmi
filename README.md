@@ -35,9 +35,8 @@ Compatibility was not of a prime concern to me, but I have added handling of
 old parameter names, where it seemed feasible. Some parameters are not
 supported currently:
 
- * ipmi::snmps (absent)
- * ipmi::network::type (noop)
- * lost facts ipmiX_ipaddress_source and ipmiX_macaddress
+ * `ipmi::snmps` (noop)
+ * lost facts `ipmiX_macaddress`
 
 Basic operation
 ---------------
@@ -207,6 +206,12 @@ Value must be an array. Possible values are:
  * md5
  * md2
  * plain
+
+### ip_source
+
+This property sets the method, used to obtain IP address. Possible values are
+`none`, `bios`, `static` and `dhcp`. Note, however, that only last two values
+are accepted by the available to me hardware.
 
 ### address, netmask, gateway, backup_gateway
 

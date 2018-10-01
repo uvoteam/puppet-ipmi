@@ -42,6 +42,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :auth_operator      => lan.auth[:operator].sort,
                 :auth_user          => lan.auth[:user].sort,
                 :auth_callback      => lan.auth[:callback].sort,
+                :ip_source          => lan.ipsrc,
                 :address            => lan.ipaddr,
                 :netmask            => lan.netmask,
                 :gateway            => lan.defgw_ipaddr,
@@ -94,6 +95,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 [:admin, :operator, :user, :callback].map do |role|
                     [ role, resource[:"auth_#{role}"] ] if resource[:"auth_#{role}"]
                 end.compact.to_h
+            lan.ipsrc                    = resource[:ipsrc]
             lan.ipaddr                   = resource[:address]
             lan.netmask                  = resource[:netmask]
             lan.defgw_ipaddr             = resource[:gateway]
@@ -128,6 +130,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :user     => [ :md5 ],
                 :callback => [ :md5 ],
             }
+            lan.ipsrc                    = :static
             lan.ipaddr                   = '0.0.0.0'
             lan.netmask                  = '0.0.0.0'
             lan.defgw_ipaddr             = '0.0.0.0'
@@ -163,6 +166,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                     [:admin, :operator, :user, :callback].map do |role|
                         [ role, @property_hash[:"auth_#{role}"] ] if @property_hash[:"auth_#{role}"]
                     end.compact.to_h
+                lan.ipsrc                    = @property_hash[:ipsrc]                      if @property_hash.has_key? :ipsrc
                 lan.ipaddr                   = @property_hash[:address]                    if @property_hash.has_key? :address
                 lan.netmask                  = @property_hash[:netmask]                    if @property_hash.has_key? :netmask
                 lan.defgw_ipaddr             = @property_hash[:gateway]                    if @property_hash.has_key? :gateway

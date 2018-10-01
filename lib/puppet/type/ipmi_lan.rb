@@ -53,6 +53,11 @@ Puppet::Type.newtype(:ipmi_lan) do
         end
     end
 
+    newproperty(:ip_source) do
+        desc "Indicates what means are used to obtain this channel's IP address"
+        newvalues(:bios, :dhcp, :static, :none)
+    end
+
     newproperty(:address) do
         desc 'IP address for the channel'
         validate do |value|

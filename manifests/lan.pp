@@ -1,6 +1,7 @@
 
 define ipmi::lan (
     Optional[Integer]     $channel            = undef,
+    Ipmi::Ipsrc           $ip_source          = static,
     Ipmi::Ipaddr          $address,
     Ipmi::Ipaddr          $netmask,
     Ipmi::Ipaddr          $gateway,
@@ -24,6 +25,7 @@ define ipmi::lan (
         auth_operator      => $auth_operator,
         auth_user          => $auth_user,
         auth_callback      => $auth_callback,
+        ip_source          => $ip_source,
         address            => $address,
         netmask            => $netmask,
         gateway            => $gateway,

@@ -3,15 +3,15 @@ define ipmi::network (
     Ipmi::Ipaddr      $ip          = '0.0.0.0',
     Ipmi::Ipaddr      $netmask     = '255.255.255.0',
     Ipmi::Ipaddr      $gateway     = '0.0.0.0',
-    # XXX atm unsupported!
     Enum[dhcp,static] $type        = dhcp,
     Integer           $lan_channel = 1,
 ){
     ipmi::lan { "${title}":
-        channel => $lan_channel,
-        address => $ip,
-        netmask => $netmask,
-        gateway => $gateway,
+        channel   => $lan_channel,
+        ip_source => $type,
+        address   => $ip,
+        netmask   => $netmask,
+        gateway   => $gateway,
     }
 }
 
