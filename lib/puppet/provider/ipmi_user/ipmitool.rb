@@ -56,8 +56,8 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 :password  => '*hidden*',
             }
 
-            absent = user.name == "disabled#{user.uid}" and
-                     not user.enabled
+            absent = (user.name == "disabled#{user.uid}" and
+                      not user.enabled)
 
             ipmi.lan_cids.each do |cid|
                 user = ipmi.users(cid).user(user.uid)
