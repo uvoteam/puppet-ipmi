@@ -190,7 +190,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 # enable manipulates password, thus if it does not exist, it may fail
                 user.enabled   = @property_flush[:enable]       if @property_flush.has_key? :enable
                 ipmi.lan_cids.each do |cid|
-                    ipmi.users(cid).user(@property_flush[:userid]).tap do |user|
+                    ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
                         user.privilege = @property_flush[:"role_#{cid}"]      if @property_flush.has_key? :"role_#{cid}"
                         user.callin    = @property_flush[:"callin_#{cid}"]    if @property_flush.has_key? :"callin_#{cid}"
                         user.link      = @property_flush[:"link_auth_#{cid}"] if @property_flush.has_key? :"link_auth_#{cid}"
