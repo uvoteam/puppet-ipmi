@@ -140,7 +140,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 @property_flush[:"link_auth_#{cid}"] = resource[:"link_auth_#{cid}"]
                 @property_flush[:"ipmi_msg_#{cid}"]  = resource[:"ipmi_msg_#{cid}"]
                 @property_flush[:"sol_#{cid}"]       = resource[:"sol_#{cid}"]
-                end
             end
         end
     end
