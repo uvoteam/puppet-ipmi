@@ -140,7 +140,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             @property_flush[:password] = resource[:password]
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = resource[:"role_#{cid}"]
-                @porperty_flush[:"callin_#{cid}"]    = resource[:"callin_#{cid}"]
+                @property_flush[:"callin_#{cid}"]    = resource[:"callin_#{cid}"]
                 @property_flush[:"link_auth_#{cid}"] = resource[:"link_auth_#{cid}"]
                 @property_flush[:"ipmi_msg_#{cid}"]  = resource[:"ipmi_msg_#{cid}"]
                 @property_flush[:"sol_#{cid}"]       = resource[:"sol_#{cid}"]
@@ -155,7 +155,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             @property_flush[:password] = random_password
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = :no_access
-                @porperty_flush[:"callin_#{cid}"]    = false
+                @property_flush[:"callin_#{cid}"]    = false
                 @property_flush[:"link_auth_#{cid}"] = false
                 @property_flush[:"ipmi_msg_#{cid}"]  = false
                 @property_flush[:"sol_#{cid}"]       = false
