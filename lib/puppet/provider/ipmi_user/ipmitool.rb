@@ -40,6 +40,10 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         @property_flush = {}
     end
 
+    def random_password
+        ('a'..'z').to_a.shuffle[0,15].join
+    end
+
     # provider stuff
     def self.instances
         ipmi.users.map do |user|
@@ -148,6 +152,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         ipmi.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = "disabled#{user.uid}"
             @property_flush[:enable]   = false
+            @property_flush[:password] = random_password
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = :no_access
                 @porperty_flush[:"callin_#{cid}"]    = false
@@ -181,8 +186,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             ipmi.users.user(@property_hash[:userid]).tap do |user|
                 # we're not trying to set username to the same value, since it will fail on RMM with 'conflicting name'
                 user.name      = @property_flush[:username]     if @property_flush.has_key? :username and @property_flush[:username] != user.name
-                user.enabled   = @property_flush[:enable]       if @property_flush.has_key? :enable
                 user.password  = @property_flush[:password], 20 if @property_flush.has_key? :password
+                # enable manipulates password, thus if it does not exist, it may fail
+                user.enabled   = @property_flush[:enable]       if @property_flush.has_key? :enable
                 ipmi.lan_cids.each do |cid|
                     ipmi.users(cid).user(@property_flush[:userid]).tap do |user|
                         user.privilege = @property_flush[:"role_#{cid}"]      if @property_flush.has_key? :"role_#{cid}"
