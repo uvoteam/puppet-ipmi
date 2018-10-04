@@ -1,5 +1,6 @@
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
+require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'random_password')
 
 module IPMIUserResourceFilter
     def assign_resources instances
@@ -38,10 +39,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def initialize options
         super options
         @property_flush = {}
-    end
-
-    def random_password
-        ('a'..'z').to_a.shuffle[0,15].join
     end
 
     # provider stuff
@@ -152,7 +149,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         ipmi.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = "disabled#{user.uid}"
             @property_flush[:enable]   = false
-            @property_flush[:password] = random_password
+            @property_flush[:password] = HelperRandomPassword.random_password
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = :no_access
                 @property_flush[:"callin_#{cid}"]    = false
