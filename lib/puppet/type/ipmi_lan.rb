@@ -1,6 +1,4 @@
 
-require 'puppet/property/boolean'
-
 Puppet::Type.newtype(:ipmi_lan) do
     @doc = <<-'DOC'
     This represents ipmi LAN channel.
@@ -87,24 +85,28 @@ Puppet::Type.newtype(:ipmi_lan) do
     end
 
     newproperty(:arp_enable) do
-        newvalues(:false, :true, :advertise)
         desc 'Enable ARP responses for channel (true, false, advertise)'
+        newvalues(:false, :true, :advertise)
     end
 
     newproperty(:snmp_community) do
         desc 'SNMP community string'
+        newvalues(:true, :false)
     end
 
-    newproperty(:sol_enable, :boolean => true, :parent => Puppet::Property::Boolean) do
+    newproperty(:sol_enable) do
         desc 'Enable Serial Over LAN'
+        newvalues(:true, :false)
     end
 
-    newproperty(:sol_encryption, :boolean => true, :parent => Puppet::Property::Boolean) do
+    newproperty(:sol_encryption) do
         desc 'Force encryption for SOL'
+        newvalues(:true, :false)
     end
 
-    newproperty(:sol_authentication, :boolean => true, :parent => Puppet::Property::Boolean) do
+    newproperty(:sol_authentication) do
         desc 'Force authentication for SOL'
+        newvalues(:true, :false)
     end
 
     newproperty(:ciphers, :array_matching => :all) do

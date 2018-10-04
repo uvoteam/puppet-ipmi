@@ -1,6 +1,7 @@
 
-require 'puppet/property/boolean'
 require 'puppet/parameter/boolean'
+
+require File.join(File.dirname(__FILE__), '..', '..', 'puppet_x', 'coerce_boolean')
 
 Puppet::Type.newtype(:ipmi_user) do
     @doc = <<-'DOC'
@@ -42,15 +43,17 @@ Puppet::Type.newtype(:ipmi_user) do
         ]
     end
 
-    newproperty(:enable, :boolean => true, :parent => Puppet::Property::Boolean) do
+    newproperty(:enable) do
         desc 'This defines if user should be enabled or disabled.'
+        newvalues(:true, :false)
     end
 
-    newproperty(:immutable, :boolean => true, :parent => Puppet::Property::Boolean) do
+    newproperty(:immutable) do
         desc 'This read-only property indicates, if user name is marked as "fixed".'
         validate do |value|
             raise ArgumentError, 'IPMI does not allow to change username immutability'
         end
+        newvalues(:true, :false)
     end
 
     newproperty(:password) do
@@ -96,24 +99,28 @@ Puppet::Type.newtype(:ipmi_user) do
             defaultto { resource[:role] }
         end
 
-        newproperty(:"callin_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+        newproperty(:"callin_#{cid}", :required_features => :"lan_channel_#{cid}") do
             desc "Permission for call-in on channel #{cid}."
-            defaultto { resource[:callin] }
+            newvalues(:true, :false)
+            defaultto { HelperCoerceBoolean.from_boolean resource[:callin] }
         end
 
-        newproperty(:"link_auth_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+        newproperty(:"link_auth_#{cid}", :required_features => :"lan_channel_#{cid}") do
             desc "Permission for link auth on channel #{cid}."
-            defaultto { resource[:link_auth] }
+            newvalues(:true, :false)
+            defaultto { HelperCoerceBoolean.from_boolean resource[:link_auth] }
         end
 
-        newproperty(:"ipmi_msg_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+        newproperty(:"ipmi_msg_#{cid}", :required_features => :"lan_channel_#{cid}") do
             desc "Permission to send ipmi messages on channel #{cid}."
-            defaultto { resource[:ipmi_msg] }
+            newvalues(:true, :false)
+            defaultto { HelperCoerceBoolean.from_boolean resource[:ipmi_msg] }
         end
 
-        newproperty(:"sol_#{cid}", :required_features => :"lan_channel_#{cid}", :boolean => true, :parent => Puppet::Property::Boolean) do
+        newproperty(:"sol_#{cid}", :required_features => :"lan_channel_#{cid}") do
             desc "Permission to use Serial Over LAN on channel #{cid}."
-            defaultto { resource[:sol] }
+            newvalues(:true, :false)
+            defaultto { HelperCoerceBoolean.from_boolean resource[:sol] }
         end
     end
 end

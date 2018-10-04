@@ -1,6 +1,7 @@
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'random_password')
+require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'coerce_boolean')
 
 module IPMILANResourceFilter
     def assign_resources instances
@@ -55,9 +56,9 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 :backup_gateway     => lan.bakgw_ipaddr,
                 :arp_enable         => (lan.arp_respond ? (lan.arp_generate ? :advertise : :true) : :false),
                 :snmp_community     => lan.snmp,
-                :sol_enable         => lan.sol.enabled,
-                :sol_encryption     => lan.sol.force_encryption,
-                :sol_authentication => lan.sol.force_authentication,
+                :sol_enable         => HelperCoerceBoolean.from_boolean(lan.sol.enabled),
+                :sol_encryption     => HelperCoerceBoolean.from_boolean(lan.sol.force_encryption),
+                :sol_authentication => HelperCoerceBoolean.from_boolean(lan.sol.force_authentication),
             }
 
             if IPMI.has_ipmi_2?
@@ -134,11 +135,11 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             @property_flush[:netmask]            = '0.0.0.0'
             @propetry_flush[:gateway]            = '0.0.0.0'
             @property_flush[:backup_gateway]     = '0.0.0.0'
-            @property_flush[:arp_enable]         = false
+            @property_flush[:arp_enable]         = :false
             @property_flush[:snmp_community]     = HelperRandomPassword.random_password 8
-            @property_flush[:sol_enable]         = false
-            @property_flush[:sol_encryption]     = true
-            @property_flush[:sol_authentication] = true
+            @property_flush[:sol_enable]         = :false
+            @property_flush[:sol_encryption]     = :true
+            @property_flush[:sol_authentication] = :true
             @property_flush[:ciphers]            = [ 3, 8, 12 ]
         end
     end
@@ -152,21 +153,21 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
                 lan.auth                     =
                     [:admin, :operator, :user, :callback].map do |role|
-                        [ role, @property_flush[:"auth_#{role}"] ] if @property_flush[:"auth_#{role}"]
+                        [ role, @property_flush[:"auth_#{role}"] ] if not @property_flush[:"auth_#{role}"].nil?
                     end.compact.to_h
-                lan.ipsrc                    = @property_flush[:ipsrc]                      if @property_flush.has_key?(:ipsrc) and not @property_flush[:ipsrc].nil?
-                lan.ipaddr                   = @property_flush[:address]                    if @property_flush.has_key?(:address) and not @property_flush[:address].nil?
-                lan.netmask                  = @property_flush[:netmask]                    if @property_flush.has_key?(:netmask) and not @property_flush[:netmask].nil?
-                lan.defgw_ipaddr             = @property_flush[:gateway]                    if @property_flush.has_key?(:gateway) and not @property_flush[:gateway].nil?
-                lan.bakgw_ipaddr             = @property_flush[:backup_gateway]             if @property_flush.has_key?(:backup_gateway) and not @property_flush[:backup_gateway].nil?
-                if @property_flush.has_key?(:arp_enable) and not @property_flush[:arp_enable].nil?
+                lan.ipsrc                    = @property_flush[:ipsrc]                                              if not @property_flush[:ipsrc].nil?
+                lan.ipaddr                   = @property_flush[:address]                                            if not @property_flush[:address].nil?
+                lan.netmask                  = @property_flush[:netmask]                                            if not @property_flush[:netmask].nil?
+                lan.defgw_ipaddr             = @property_flush[:gateway]                                            if not @property_flush[:gateway].nil?
+                lan.bakgw_ipaddr             = @property_flush[:backup_gateway]                                     if not @property_flush[:backup_gateway].nil?
+                if not @property_flush[:arp_enable].nil?
                     lan.arp_respond          = (@property_flush[:arp_enable] != :false)
                     lan.arp_generate         = (@property_flush[:arp_enable] == :advertise)
                 end
-                lan.snmp                     = @property_flush[:snmp_community]             if @property_flush.has_key?(:snmp_community) and not @property_flush[:snmp_community].nil?
-                lan.sol.enabled              = @property_flush[:sol_enable]                 if @property_flush.has_key?(:sol_enable) and not @property_flush[:sol_enable].nil?
-                lan.sol.force_encryption     = @property_flush[:sol_encryption]             if @property_flush.has_key?(:sol_encryption) and not @property_flush[:sol_encryption].nil?
-                lan.sol.force_authentication = @property_flush[:sol_authentication]         if @property_flush.has_key?(:sol_authentication) and not @property_flush[:sol_authentication].nil?
+                lan.snmp                     = @property_flush[:snmp_community]                                     if not @property_flush[:snmp_community].nil?
+                lan.sol.enabled              = HelperCoerceBoolean.to_boolean(@property_flush[:sol_enable])         if not @property_flush[:sol_enable].nil?
+                lan.sol.force_encryption     = HelperCoerceBoolean.to_boolean(@property_flush[:sol_encryption])     if not @property_flush[:sol_encryption].nil?
+                lan.sol.force_authentication = HelperCoerceBoolean.to_boolean(@property_flush[:sol_authentication]) if not @property_flush[:sol_authentication].nil?
                 if @property_flush[:ciphers].is_a? Array
                     if IPMI.has_ipmi_2?
                         lan.cipher_privs =

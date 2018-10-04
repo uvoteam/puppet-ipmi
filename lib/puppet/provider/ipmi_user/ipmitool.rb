@@ -1,6 +1,7 @@
 
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'ipmi')
 require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'random_password')
+require File.join(File.dirname(__FILE__), '..', '..', '..', 'puppet_x', 'coerce_boolean')
 
 module IPMIUserResourceFilter
     def assign_resources instances
@@ -47,9 +48,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             params = {
                 :name      => "#{user.name}:#{user.uid}",
                 :username  => user.name,
-                :enable    => user.enabled,
+                :enable    => HelperCoerceBoolean.from_boolean(user.enabled),
                 :userid    => user.uid,
-                :immutable => user.fixed_name,
+                :immutable => HelperCoerceBoolean.from_boolean(user.fixed_name),
                 :password  => '*hidden*',
             }
 
@@ -59,10 +60,10 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             ipmi.lan_cids.each do |cid|
                 user = ipmi.users(cid).user(user.uid)
                 params[:"role_#{cid}"]      = user.privilege
-                params[:"callin_#{cid}"]    = user.callin
-                params[:"link_auth_#{cid}"] = user.link
-                params[:"ipmi_msg_#{cid}"]  = user.ipmi
-                params[:"sol_#{cid}"]       = user.sol
+                params[:"callin_#{cid}"]    = HelperCoerceBoolean.from_boolean user.callin
+                params[:"link_auth_#{cid}"] = HelperCoerceBoolean.from_boolean user.link
+                params[:"ipmi_msg_#{cid}"]  = HelperCoerceBoolean.from_boolean user.ipmi
+                params[:"sol_#{cid}"]       = HelperCoerceBoolean.from_boolean user.sol
                 absent &&= (user.privilege == :no_access  and
                             not user.callin               and
                             not user.link                 and
@@ -97,7 +98,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         variable.extend(IPMIUserResourceFilter)
             .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
             .assign_resources(insts) { |instance, resource| instance.userid > 2 and instance.ensure == :absent }
-            .assign_resources(insts) { |instance, resource| instance.userid > 2 and not instance.enable }
+            .assign_resources(insts) { |instance, resource| instance.userid > 2 and not instance.enable == :true }
             .assign_resources(insts) { |instance, resource| instance.userid > 2 }
             .each do |resource|
                 fail("Unable to find free UID for resource Ipmi_user[#{resource[:name]}]")
@@ -133,7 +134,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def create
         ipmi.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = resource[:username]
-            @property_flush[:enable]   = true
+            @property_flush[:enable]   = :true
             @property_flush[:password] = resource[:password]
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = resource[:"role_#{cid}"]
@@ -148,14 +149,14 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     def destroy
         ipmi.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = "disabled#{user.uid}"
-            @property_flush[:enable]   = false
+            @property_flush[:enable]   = :false
             @property_flush[:password] = HelperRandomPassword.random_password
             ipmi.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = :no_access
-                @property_flush[:"callin_#{cid}"]    = false
-                @property_flush[:"link_auth_#{cid}"] = false
-                @property_flush[:"ipmi_msg_#{cid}"]  = false
-                @property_flush[:"sol_#{cid}"]       = false
+                @property_flush[:"callin_#{cid}"]    = :false
+                @property_flush[:"link_auth_#{cid}"] = :false
+                @property_flush[:"ipmi_msg_#{cid}"]  = :false
+                @property_flush[:"sol_#{cid}"]       = :false
             end
         end
     end
@@ -182,17 +183,17 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         unless @property_flush.empty?
             ipmi.users.user(@property_hash[:userid]).tap do |user|
                 # we're not trying to set username to the same value, since it will fail on RMM with 'conflicting name'
-                user.name      = @property_flush[:username]     if @property_flush.has_key? :username and @property_flush[:username] != user.name
-                user.password  = @property_flush[:password], 20 if @property_flush.has_key? :password
+                user.name      = @property_flush[:username]                               if not @property_flush[:username].nil? and @property_flush[:username] != user.name
+                user.password  = @property_flush[:password], 20                           if not @property_flush[:password].nil?
                 # enable manipulates password, thus if it does not exist, it may fail
-                user.enabled   = @property_flush[:enable]       if @property_flush.has_key? :enable
+                user.enabled   = HelperCoerceBoolean.to_boolean(@property_flush[:enable]) if not @property_flush[:enable].nil?
                 ipmi.lan_cids.each do |cid|
                     ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
-                        user.privilege = @property_flush[:"role_#{cid}"]      if @property_flush.has_key? :"role_#{cid}"
-                        user.callin    = @property_flush[:"callin_#{cid}"]    if @property_flush.has_key? :"callin_#{cid}"
-                        user.link      = @property_flush[:"link_auth_#{cid}"] if @property_flush.has_key? :"link_auth_#{cid}"
-                        user.ipmi      = @property_flush[:"ipmi_msg_#{cid}"]  if @property_flush.has_key? :"ipmi_msg_#{cid}"
-                        user.sol       = @property_flush[:"sol_#{cid}"]       if @property_flush.has_key? :"sol_#{cid}"
+                        user.privilege = @property_flush[:"role_#{cid}"]                                      if not @property_flush[:"role_#{cid}"].nil?
+                        user.callin    = HelperCoerceBoolean.to_boolean(@property_flush[:"callin_#{cid}"])    if not @property_flush[:"callin_#{cid}"].nil?
+                        user.link      = HelperCoerceBoolean.to_boolean(@property_flush[:"link_auth_#{cid}"]) if not @property_flush[:"link_auth_#{cid}"].nil?
+                        user.ipmi      = HelperCoerceBoolean.to_boolean(@property_flush[:"ipmi_msg_#{cid}"])  if not @property_flush[:"ipmi_msg_#{cid}"].nil?
+                        user.sol       = HelperCoerceBoolean.to_boolean(@property_flush[:"sol_#{cid}"])       if not @property_flush[:"sol_#{cid}"].nil?
                     end
                 end
             end
