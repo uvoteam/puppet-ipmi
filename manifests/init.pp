@@ -31,11 +31,11 @@ class ipmi (
         ipmi_user { '1':
             userid    => 1,
             enable    => false,
-            callin    => false,
+            callin    => lookup(['ipmi::user::1::callin', 'ipmi::user::callin'], { default_value => false })
             link_auth => false,
             ipmi_msg  => false,
             role      => no_access,
-            sol       => false,
+            sol       => lookup(['ipmi::user::1::sol', 'ipmi::user::sol'], { default_value => false })
         }
 
         ipmi_user { '2':

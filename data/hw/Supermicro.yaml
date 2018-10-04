@@ -1,0 +1,4 @@
+---
+# Some supermicro firmware disallows setting callin and sol on UID 1
+ipmi::user::1::callin: :undef
+ipmi::user::1::sol: :undef
