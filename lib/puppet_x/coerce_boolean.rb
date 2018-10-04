@@ -1,10 +1,10 @@
 
 module HelperCoerceBoolean
-    def from_boolean value
+    def self.from_boolean value
         value ? :true : :false
     end
 
-    def to_boolean value
+    def self.to_boolean value
         value == :true
     end
 end
