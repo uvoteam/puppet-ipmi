@@ -20,18 +20,6 @@ end
 Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     commands :ipmitoolcmd => 'ipmitool'
 
-    class <<self
-        def ipmi
-            IPMI
-            # XXX extremely ugly...
-            #@ipmi ||= IPMI.tap { |obj| obj.ipmitoolcmd = proc { |*args| ipmitoolcmd *args } }
-        end
-    end
-
-    def ipmi
-        self.class.ipmi
-    end
-
     def initialize options
         super options
         @property_flush = {}
@@ -39,7 +27,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
 
     # provider stuff
     def self.instances
-        ipmi.lan_channels.map do |lan|
+        IPMI.lan_channels.map do |lan|
             params = {
                 :name               => lan.cid.to_s,
                 # XXX user-style strict checking?
@@ -105,7 +93,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def create
-        ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
+        IPMI.lan(@property_hash[:channel].to_i).tap do |lan|
             @property_flush[:auth_admin]         = resource[:"auth_admin"]
             @property_flush[:auth_operator]      = resource[:"auth_operator"]
             @property_flush[:auth_user]          = resource[:"auth_user"]
@@ -125,7 +113,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def destroy
-        ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
+        IPMI.lan(@property_hash[:channel].to_i).tap do |lan|
             @property_flush[:auth_admin]         = [ :md5 ]
             @property_flush[:auth_operator]      = [ :md5 ]
             @property_flush[:auth_user]          = [ :md5 ]
@@ -145,12 +133,12 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     end
 
     def default_channel
-        ipmi.lan.cid
+        IPMI.lan.cid
     end
 
     def flush
         unless @property_flush.empty?
-            ipmi.lan(@property_hash[:channel].to_i).tap do |lan|
+            IPMI.lan(@property_hash[:channel].to_i).tap do |lan|
                 lan.auth                     =
                     [:admin, :operator, :user, :callback].map do |role|
                         [ role, @property_flush[:"auth_#{role}"] ] if not @property_flush[:"auth_#{role}"].nil?

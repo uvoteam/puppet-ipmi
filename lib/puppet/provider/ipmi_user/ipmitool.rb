@@ -25,18 +25,6 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         has_feature :"lan_channel_#{cid}"
     end
 
-    class <<self
-        def ipmi
-            IPMI
-#            # XXX extremely ugly...
-#            @ipmi ||= IPMI.tap { |obj| obj.ipmitoolcmd = proc { |*args| ipmitoolcmd *args } }
-        end
-    end
-
-    def ipmi
-        self.class.ipmi
-    end
-
     def initialize options
         super options
         @property_flush = {}
@@ -44,7 +32,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     # provider stuff
     def self.instances
-        ipmi.users.map do |user|
+        IPMI.users.map do |user|
             params = {
                 :name      => "#{user.name}:#{user.uid}",
                 :username  => user.name,
@@ -57,8 +45,8 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             absent = (user.name == "disabled#{user.uid}" and
                       not user.enabled)
 
-            ipmi.lan_cids.each do |cid|
-                user = ipmi.users(cid).user(user.uid)
+            IPMI.lan_cids.each do |cid|
+                user = IPMI.users(cid).user(user.uid)
                 params[:"role_#{cid}"]      = user.privilege
                 params[:"callin_#{cid}"]    = HelperCoerceBoolean.from_boolean user.callin
                 params[:"link_auth_#{cid}"] = HelperCoerceBoolean.from_boolean user.link
@@ -118,7 +106,7 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     # create default property accessors
     mk_resource_methods
 
-    ( [:username, :enable, :password] + ipmi.lan_cids.flat_map do |cid|
+    ( [:username, :enable, :password] + IPMI.lan_cids.flat_map do |cid|
         [:"role_#{cid}", :"callin_#{cid}", :"link_auth_#{cid}", :"ipmi_msg_#{cid}", :"sol_#{cid}"]
     end ).each do |method_name|
         define_method "#{method_name}=" do |new_value|
@@ -132,11 +120,11 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def create
-        ipmi.users.user(@property_hash[:userid]).tap do |user|
+        IPMI.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = resource[:username]
             @property_flush[:enable]   = :true
             @property_flush[:password] = resource[:password]
-            ipmi.lan_cids.each do |cid|
+            IPMI.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = resource[:"role_#{cid}"]
                 @property_flush[:"callin_#{cid}"]    = resource[:"callin_#{cid}"]
                 @property_flush[:"link_auth_#{cid}"] = resource[:"link_auth_#{cid}"]
@@ -147,11 +135,11 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def destroy
-        ipmi.users.user(@property_hash[:userid]).tap do |user|
+        IPMI.users.user(@property_hash[:userid]).tap do |user|
             @property_flush[:username] = "disabled#{user.uid}"
             @property_flush[:enable]   = :false
             @property_flush[:password] = HelperRandomPassword.random_password
-            ipmi.lan_cids.each do |cid|
+            IPMI.lan_cids.each do |cid|
                 @property_flush[:"role_#{cid}"]      = :no_access
                 @property_flush[:"callin_#{cid}"]    = :false
                 @property_flush[:"link_auth_#{cid}"] = :false
@@ -163,11 +151,11 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
 
     def password_insync? pass
         begin
-            ipmi.users.user(@property_hash[:userid]).password? pass, 20
+            IPMI.users.user(@property_hash[:userid]).password? pass, 20
             true
         rescue Puppet::ExecutionFailure => err
             begin
-                ipmi.users.user(@property_hash[:userid]).password? pass, 16
+                IPMI.users.user(@property_hash[:userid]).password? pass, 16
                 true
             rescue Puppet::ExecutionFailure => err
                 false
@@ -176,19 +164,19 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     end
 
     def lan_list
-        ipmi.lan_cids
+        IPMI.lan_cids
     end
 
     def flush
         unless @property_flush.empty?
-            ipmi.users.user(@property_hash[:userid]).tap do |user|
+            IPMI.users.user(@property_hash[:userid]).tap do |user|
                 # we're not trying to set username to the same value, since it will fail on RMM with 'conflicting name'
                 user.name      = @property_flush[:username]                               if not @property_flush[:username].nil? and @property_flush[:username] != user.name
                 user.password  = @property_flush[:password], 20                           if not @property_flush[:password].nil?
                 # enable manipulates password, thus if it does not exist, it may fail
                 user.enabled   = HelperCoerceBoolean.to_boolean(@property_flush[:enable]) if not @property_flush[:enable].nil?
-                ipmi.lan_cids.each do |cid|
-                    ipmi.users(cid).user(@property_hash[:userid]).tap do |user|
+                IPMI.lan_cids.each do |cid|
+                    IPMI.users(cid).user(@property_hash[:userid]).tap do |user|
                         user.privilege = @property_flush[:"role_#{cid}"]                                      if not @property_flush[:"role_#{cid}"].nil?
                         user.callin    = HelperCoerceBoolean.to_boolean(@property_flush[:"callin_#{cid}"])    if not @property_flush[:"callin_#{cid}"].nil?
                         user.link      = HelperCoerceBoolean.to_boolean(@property_flush[:"link_auth_#{cid}"]) if not @property_flush[:"link_auth_#{cid}"].nil?
