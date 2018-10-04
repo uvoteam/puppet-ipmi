@@ -91,7 +91,6 @@ Puppet::Type.newtype(:ipmi_lan) do
 
     newproperty(:snmp_community) do
         desc 'SNMP community string'
-        newvalues(:true, :false)
     end
 
     newproperty(:sol_enable) do
