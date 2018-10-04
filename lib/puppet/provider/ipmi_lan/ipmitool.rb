@@ -99,9 +99,9 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             @property_flush[:auth_user]          = resource[:"auth_user"]
             @property_flush[:auth_callback]      = resource[:"auth_callback"]
             @property_flush[:ipsrc]              = resource[:ipsrc]
-            @propetry_flush[:address]            = resource[:address]
+            @property_flush[:address]            = resource[:address]
             @property_flush[:netmask]            = resource[:netmask]
-            @propetry_flush[:gateway]            = resource[:gateway]
+            @property_flush[:gateway]            = resource[:gateway]
             @property_flush[:backup_gateway]     = resource[:backup_gateway]
             @property_flush[:arp_enable]         = resource[:arp_enable]
             @property_flush[:snmp_community]     = resource[:snmp_community]
@@ -119,9 +119,9 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             @property_flush[:auth_user]          = [ :md5 ]
             @property_flush[:auth_callback]      = [ :md5 ]
             @property_flush[:ipsrc]              = :static
-            @propetry_flush[:address]            = '0.0.0.0'
+            @property_flush[:address]            = '0.0.0.0'
             @property_flush[:netmask]            = '0.0.0.0'
-            @propetry_flush[:gateway]            = '0.0.0.0'
+            @property_flush[:gateway]            = '0.0.0.0'
             @property_flush[:backup_gateway]     = '0.0.0.0'
             @property_flush[:arp_enable]         = :false
             @property_flush[:snmp_community]     = HelperRandomPassword.random_password 8
