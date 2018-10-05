@@ -32,6 +32,7 @@ define ipmi::user (
             undef => $enable ? {
                 true  => admin,
                 false => no_access,
+                undef => undef,
             },
             1 => callback,
             2 => user,
