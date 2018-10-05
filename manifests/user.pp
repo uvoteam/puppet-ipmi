@@ -5,8 +5,7 @@ define ipmi::user (
     Optional[String]     $password  = undef,
     Optional[Boolean]    $enable    = lookup(["ipmi::user::${username}::enable", "ipmi::user::${userid}::enable", 'ipmi::user::enable'],
                                              { default_value => true }),
-    Optional[Ipmi::Role] $role      = lookup(["ipmi::user::${username}::role", "ipmi::user::${userid}::role", 'ipmi::user::role'],
-                                             { default_value => undef }),
+    Optional[Ipmi::Role] $role      = undef,
     Optional[Boolean]    $callin    = lookup(["ipmi::user::${username}::callin", "ipmi::user::${userid}::callin", 'ipmi::user::callin'],
                                              { default_value => false }),
     Optional[Boolean]    $link_auth = lookup(["ipmi::user::${username}::link_auth", "ipmi::user::${userid}::link_auth", 'ipmi::user::link_auth'],
@@ -28,17 +27,20 @@ define ipmi::user (
     }
 
     $user_role = $role ? {
-        undef => $priv ? {
-            undef => $enable ? {
-                true  => admin,
-                false => no_access,
-                undef => undef,
-            },
-            1 => callback,
-            2 => user,
-            3 => operator,
-            4 => admin,
-        },
+        undef => lookup(["ipmi::user::${username}::role", "ipmi::user::${userid}::role", 'ipmi::user::role'],
+                        {
+                            default_value => $priv ? {
+                                undef => $enable ? {
+                                    true  => admin,
+                                    false => no_access,
+                                    undef => undef,
+                                },
+                                1 => callback,
+                                2 => user,
+                                3 => operator,
+                                4 => admin,
+                            },
+                        }),
         default => $role,
     }
 
