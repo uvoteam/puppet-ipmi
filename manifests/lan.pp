@@ -9,15 +9,19 @@ define ipmi::lan (
     Ipmi::Arp             $arp                = true,
     # just a random string to override the default value
     Optional[String]      $snmp               = 'WabNuojV',
-    Boolean               $sol                = false,
-    Boolean               $sol_encryption     = true,
-    Boolean               $sol_authentication = true,
-    # this needs overrides on per-vendor basis, so, we lookup this parameter.
-    Array[Integer]        $ciphers            = lookup(['ipmi::lan::ciphers', "ipmi::lan::${title}::ciphers"], { default_value => [ 3, 8, 12 ] }),
     Array[Ipmi::Authtype] $auth_admin         = [ md5 ],
     Array[Ipmi::Authtype] $auth_operator      = [ md5 ],
     Array[Ipmi::Authtype] $auth_user          = [ md5 ],
     Array[Ipmi::Authtype] $auth_callback      = [ md5 ],
+    # this needs overrides on per-vendor basis, so, we lookup these parameters.
+    Optional[Boolean]     $sol                = lookup(["ipmi::lan::${title}::sol", 'ipmi::lan::sol'],
+                                                       { default_value => false }),
+    Optional[Boolean]     $sol_encryption     = lookup(["ipmi::lan::${title}::sol_encryption", 'ipmi::lan::sol_encryption'],
+                                                       { default_value => true }),
+    Optional[Boolean]     $sol_authentication = lookup(["ipmi::lan::${title}::sol_authentication", 'ipmi::lan::sol_authentication'],
+                                                       { default_value => true }),
+    Array[Integer]        $ciphers            = lookup(["ipmi::lan::${title}::ciphers", 'ipmi::lan::ciphers'],
+                                                       { default_value => [ 3, 8, 12 ] }),
 ) {
     ipmi_lan { $title:
         channel            => $channel,
