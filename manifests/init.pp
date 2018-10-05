@@ -26,22 +26,22 @@ class ipmi (
     create_resources('ipmi::network', $networks)
 
     if $purge_users {
-        # we cannot properly set special users 1 and 2 to be disabled
-        # so we will treat them differently
-        ipmi_user { '1':
-            userid    => 1,
-            enable    => false,
-            callin    => lookup(['ipmi::user::1::callin', 'ipmi::user::callin'], { default_value => false }),
-            link_auth => false,
-            ipmi_msg  => false,
-            role      => no_access,
-            sol       => lookup(['ipmi::user::1::sol', 'ipmi::user::sol'], { default_value => false }),
+        # We cannot properly set special users 1 and 2 to be disabled, so we define them here.
+        # User parameters may vary on vendor and are taken from hiera.
+        ipmi::user { '1':
+            userid => 1,
         }
 
-        ipmi_user { '2':
-            userid    => 2,
-            enable    => false,
-            sol       => false,
+        ipmi::user { '2':
+            userid => 2,
+        }
+
+        if ($::facts['boardmanufacturer'] == 'Dell Inc.') {
+            # Some versions of iDRAC's have broken UID 16, that could not be assigned a password.
+            # Here name 'broken16' is used for this user to not be detected as 'absent'.
+            ipmi::user { 'broken16':
+                userid => 16,
+            }
         }
 
         resources { 'ipmi_user':

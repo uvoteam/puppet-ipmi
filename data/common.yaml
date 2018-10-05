@@ -4,3 +4,18 @@ lookup_options:
     # thus we deep-merge users parameter.
     ipmi::users:
         merge: deep
+
+# Defaults for disabled system users
+ipmi::user::1::enable:    false
+ipmi::user::1::role:      no_access
+ipmi::user::1::callin:    false
+ipmi::user::1::link_auth: false
+ipmi::user::1::ipmi_msg:  false
+ipmi::user::1::sol:       false
+
+ipmi::user::2::enable:    false
+ipmi::user::2::role:      :undef
+ipmi::user::2::callin:    :undef
+ipmi::user::2::link_auth: :undef
+ipmi::user::2::ipmi_msg:  :undef
+ipmi::user::2::sol:       false

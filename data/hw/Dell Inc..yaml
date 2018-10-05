@@ -2,3 +2,11 @@
 # we're setting ipmi_msg to true on Dells by default because of iDRAC6's 'enable' behaviour
 # to avoid flip-flops when 'ipmi_msg' unsets 'enable', and 'enable' sets 'ipmi_msg'.
 ipmi::user::ipmi_msg: true
+
+# UID 16 is broken on some versions of iDRAC's
+ipmi::user::16::enable:    false
+ipmi::user::16::role:      no_access
+ipmi::user::16::callin:    false
+ipmi::user::16::ipmi_msg:  false
+ipmi::user::16::link_auth: false
+ipmi::user::16::sol:       false
