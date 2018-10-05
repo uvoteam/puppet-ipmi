@@ -99,7 +99,10 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
             .assign_resources(insts) { |instance, resource| instance.username == resource[:username] }
             .each do |resource|
                 debug "Deleting absent resource Ipmi_user[#{resource[:name]}]"
+                # FIXME I've found no reliable way to remove resource from catalog at this stage.
+                # So, I mark it as virtual, so puppet will not apply it. But this is fragile.
                 resource.remove
+                resource.virtual = true
             end
     end
 

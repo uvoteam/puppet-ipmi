@@ -16,17 +16,22 @@ The ideas behind this implementation:
 Notes
 -----
 
+ * **WARNING!** On Dell iDRAC 7 creating administrative user from ipmitool does not give him access to web interface!
+   So, you must always fix your users to specific UIDs and manually assign these UIDs webui rights.
  * When making user 'absent' we're assigning it non-empty name 'disabled${uid}', because
    1) intel rmm3 refuses to assign empty names to users.
    2) intel rmm3 refuses to set parameters on not yet created users, thus you need to set name first.
  * Intel RMM3 refuses to have several users with the same name.
  * **BUG** on Intel RMM, when you assign any number of spaces as a username, it freaks out and won't allow you to change user name anymore.
    So, such user slot is effectively lost (maybe it can be recovered by reflashing with factory reset, but I haven't tried it yet).
- * **BUG** On Dell iDRAC 7 user id 16 cannot be enabled/disabled via ipmitool.
- * **WARNING** On Dell iDRAC 7 creating administrative user from ipmitool does not give him access to web interface!
+ * **BUG** On some Dell iDRAC's user id 16 cannot be enabled/disabled via ipmitool.
  * On Dell iDRAC 6 user 'enabled' property is equal to both link_auth and ipmi_msg set at the same time.
    Since I could find no way to determine iDRAC version lest listing all mobos/firmware combinations, I have
    updated default 'ipmi_msg' value for all Dell boards to be true.
+ * Due to some tricks used to get around internal Puppet mechanics, virtualising
+   `ipmi_lan` and `ipmi_user` resources may not work as expected (there are extra
+   virtual resources present in the background, thus your resource realization
+   instructions may realize them as well).
 
 Compatibility
 -------------
