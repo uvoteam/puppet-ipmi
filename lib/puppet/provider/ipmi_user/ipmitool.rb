@@ -52,11 +52,11 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 params[:"link_auth_#{cid}"] = HelperCoerceBoolean.from_boolean user.link
                 params[:"ipmi_msg_#{cid}"]  = HelperCoerceBoolean.from_boolean user.ipmi
                 params[:"sol_#{cid}"]       = HelperCoerceBoolean.from_boolean user.sol
-                absent &&= (user.privilege == :no_access  and
-                            not user.callin               and
-                            not user.link                 and
-                            not user.ipmi                 and
-                            not user.sol)
+                absent &&= (params[:"role_#{cid}"]      == :no_access and
+                            params[:"callin_#{cid}"]    == :false     and
+                            params[:"link_auth_#{cid}"] == :false     and
+                            params[:"ipmi_msg_#{cid}"]  == :false     and
+                            params[:"sol_#{cid}"]       != :true)
             end
 
             params[:ensure] = absent ? :absent : :present
@@ -184,7 +184,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                         user.callin    = HelperCoerceBoolean.to_boolean(@property_flush[:"callin_#{cid}"])    if not @property_flush[:"callin_#{cid}"].nil?
                         user.link      = HelperCoerceBoolean.to_boolean(@property_flush[:"link_auth_#{cid}"]) if not @property_flush[:"link_auth_#{cid}"].nil?
                         user.ipmi      = HelperCoerceBoolean.to_boolean(@property_flush[:"ipmi_msg_#{cid}"])  if not @property_flush[:"ipmi_msg_#{cid}"].nil?
-                        user.sol       = HelperCoerceBoolean.to_boolean(@property_flush[:"sol_#{cid}"])       if not @property_flush[:"sol_#{cid}"].nil?
+                        if IPMI.has_ipmi_2?
+                            user.sol   = HelperCoerceBoolean.to_boolean(@property_flush[:"sol_#{cid}"])       if not @property_flush[:"sol_#{cid}"].nil?
+                        end
                     end
                 end
             end
