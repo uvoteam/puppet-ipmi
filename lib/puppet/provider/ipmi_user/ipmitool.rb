@@ -176,10 +176,16 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
         unless @property_flush.empty?
             IPMI.users.user(@property_hash[:userid]).tap do |user|
                 # we're not trying to set username to the same value, since it will fail on RMM with 'conflicting name'
-                user.name      = @property_flush[:username]                               if not @property_flush[:username].nil? and @property_flush[:username] != user.name
-                user.password  = @property_flush[:password], 20                           if not @property_flush[:password].nil?
+                user.name = @property_flush[:username] if not @property_flush[:username].nil? and @property_flush[:username] != user.name
+                if not @property_flush[:password].nil?
+                    begin
+                        user.password = @property_flush[:password], 20
+                    rescue Puppet::ExecutionFailure
+                        user.password = @property_flush[:password], 16
+                    end
+                end
                 # enable manipulates password, thus if it does not exist, it may fail
-                user.enabled   = HelperCoerceBoolean.to_boolean(@property_flush[:enable]) if not @property_flush[:enable].nil?
+                user.enabled = HelperCoerceBoolean.to_boolean(@property_flush[:enable]) if not @property_flush[:enable].nil?
                 IPMI.lan_cids.each do |cid|
                     IPMI.users(cid).user(@property_hash[:userid]).tap do |user|
                         user.privilege = @property_flush[:"role_#{cid}"]                                      if not @property_flush[:"role_#{cid}"].nil?
