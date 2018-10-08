@@ -19,6 +19,7 @@ end
 
 Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
     commands :ipmitoolcmd => 'ipmitool'
+    confine :true => begin IPMI.present? end
 
     # XXX will this work in the absence of ipmitool?
     IPMI.lan_cids.each do |cid|

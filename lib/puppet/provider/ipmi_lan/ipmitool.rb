@@ -19,6 +19,7 @@ end
 
 Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
     commands :ipmitoolcmd => 'ipmitool'
+    confine :true => begin IPMI.present? end
 
     def initialize options
         super options

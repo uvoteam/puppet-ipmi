@@ -81,6 +81,10 @@ class IPMI
         #  Global system state objects
         #
 
+        def present?
+            ['/dev/ipmi0', '/dev/ipmi/0', '/dev/ipmidev/0'].find { |dev| File.exist? dev }
+        end
+
         def version
             Gem::Version.new(IPMI.ipmitool(['mc', 'info']).fetch(:ipmi_version).first)
         end
