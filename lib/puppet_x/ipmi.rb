@@ -302,8 +302,16 @@ class IPMI
             set :snmp, value
         end
 
+        def get_arp
+            if text = get(:bmc_arp_control)
+                text.split /,\s*/
+            else
+                []
+            end
+        end
+
         def arp_respond
-            get(:bmc_arp_control).split(/,\s*/).include? 'ARP Responses Enabled'
+            get_arp.include? 'ARP Responses Enabled'
         end
 
         def arp_respond= value
@@ -318,7 +326,7 @@ class IPMI
         end
 
         def arp_generate
-            get(:bmc_arp_control).split(/,\s*/).include? 'Gratuitous ARP Enabled'
+            get_arp.include? 'Gratuitous ARP Enabled'
         end
 
         def arp_generate= value
