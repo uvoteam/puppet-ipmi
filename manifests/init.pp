@@ -36,9 +36,11 @@ class ipmi (
             userid => 2,
         }
 
-        if ($::facts['boardmanufacturer'] == 'Dell Inc.') {
+        if ($::facts['boardmanufacturer'] == 'Dell Inc.' and $::facts['ipmi_version'] == '2.0') {
             # Some versions of iDRAC's have broken UID 16, that could not be assigned a password.
             # Here name 'broken16' is used for this user to not be detected as 'absent'.
+            # The only instance of iDRAC's that I have on hand that have only 10 UIDs is the one
+            # with IPMIv1.5, thus the exception.
             ipmi::user { 'broken16':
                 userid => 16,
             }
