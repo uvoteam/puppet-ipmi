@@ -51,7 +51,9 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 params[:"callin_#{cid}"]    = HelperCoerceBoolean.from_boolean user.callin
                 params[:"link_auth_#{cid}"] = HelperCoerceBoolean.from_boolean user.link
                 params[:"ipmi_msg_#{cid}"]  = HelperCoerceBoolean.from_boolean user.ipmi
-                params[:"sol_#{cid}"]       = HelperCoerceBoolean.from_boolean user.sol
+                if IPMI.has_ipmi_2?
+                    params[:"sol_#{cid}"]   = HelperCoerceBoolean.from_boolean user.sol
+                end
                 absent &&= (params[:"role_#{cid}"]      == :no_access and
                             params[:"callin_#{cid}"]    == :false     and
                             params[:"link_auth_#{cid}"] == :false     and
