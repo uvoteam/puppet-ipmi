@@ -152,8 +152,19 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                 lan.defgw_ipaddr             = @property_flush[:gateway]                                                if not @property_flush[:gateway].nil?
                 lan.bakgw_ipaddr             = @property_flush[:backup_gateway]                                         if not @property_flush[:backup_gateway].nil?
                 if not @property_flush[:arp_enable].nil?
-                    lan.arp_respond          = (@property_flush[:arp_enable] != :false)
-                    lan.arp_generate         = (@property_flush[:arp_enable] == :advertise)
+                    begin
+                        lan.arp_respond      = (@property_flush[:arp_enable] != :false)
+                        lan.arp_generate     = (@property_flush[:arp_enable] == :advertise)
+                    rescue
+                        # XXX So far I have only run into one instance of iDRAC, that shows no sign of
+                        #     supporting ARP control. Coincidentally, that is also the only IPMIv1.5
+                        #     server, that I have access to.
+                        if not IPMI.has_ipmi_2?
+                            Puppet.warning("This IPMI does not support controls for ARP, ignoring")
+                        else
+                            raise
+                        end
+                    end
                 end
                 lan.snmp                     = @property_flush[:snmp_community]                                         if not @property_flush[:snmp_community].nil?
                 if IPMI.has_ipmi_2?
