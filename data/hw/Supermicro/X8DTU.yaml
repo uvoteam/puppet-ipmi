@@ -1,0 +1,4 @@
+---
+# Older servers with X8DTU boards refuse to accept authentication, when
+# cipher 1 is disabled.
+ipmi::lan::ciphers: [ 1, 3, 8, 12 ]

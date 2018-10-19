@@ -7,5 +7,7 @@ hierarchy:
       path: "os/%{osfamily}.yaml"
     - name: Hardware manufacturer specific settings
       path: "hw/%{boardmanufacturer}.yaml"
+    - name: Hardware model-specific settings
+      path: "hw/%{boardmanufacturer}/%{boardproductname}.yaml"
     - name: Static commons
       path: common.yaml
