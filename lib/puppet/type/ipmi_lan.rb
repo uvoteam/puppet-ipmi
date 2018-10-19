@@ -120,7 +120,7 @@ Puppet::Type.newtype(:ipmi_lan) do
         end
 
         def insync? is
-            (is - should).empty?
+            is == should.sort.uniq
         end
     end
 end
