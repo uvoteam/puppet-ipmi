@@ -102,7 +102,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             @property_flush[:auth_operator]      = resource[:"auth_operator"]
             @property_flush[:auth_user]          = resource[:"auth_user"]
             @property_flush[:auth_callback]      = resource[:"auth_callback"]
-            @property_flush[:ipsrc]              = resource[:ipsrc]
+            @property_flush[:ip_source]          = resource[:ip_source]
             @property_flush[:address]            = resource[:address]
             @property_flush[:netmask]            = resource[:netmask]
             @property_flush[:gateway]            = resource[:gateway]
@@ -122,7 +122,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
             @property_flush[:auth_operator]      = [ :md5 ]
             @property_flush[:auth_user]          = [ :md5 ]
             @property_flush[:auth_callback]      = [ :md5 ]
-            @property_flush[:ipsrc]              = :static
+            @property_flush[:ip_source]          = :static
             @property_flush[:address]            = '0.0.0.0'
             @property_flush[:netmask]            = '0.0.0.0'
             @property_flush[:gateway]            = '0.0.0.0'
@@ -147,7 +147,7 @@ Puppet::Type.type(:ipmi_lan).provide(:ipmitool) do
                     [:admin, :operator, :user, :callback].map do |role|
                         [ role, @property_flush[:"auth_#{role}"] ] if not @property_flush[:"auth_#{role}"].nil?
                     end.compact.to_h
-                lan.ipsrc                    = @property_flush[:ipsrc]                                                  if not @property_flush[:ipsrc].nil?
+                lan.ipsrc                    = @property_flush[:ip_source]                                              if not @property_flush[:ip_source].nil?
                 lan.ipaddr                   = @property_flush[:address]                                                if not @property_flush[:address].nil?
                 lan.netmask                  = @property_flush[:netmask]                                                if not @property_flush[:netmask].nil?
                 lan.defgw_ipaddr             = @property_flush[:gateway]                                                if not @property_flush[:gateway].nil?
