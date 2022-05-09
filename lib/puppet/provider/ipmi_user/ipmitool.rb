@@ -189,7 +189,8 @@ Puppet::Type.type(:ipmi_user).provide(:ipmitool) do
                 user.enabled = HelperCoerceBoolean.to_boolean(@property_flush[:enable]) if not @property_flush[:enable].nil?
                 IPMI.lan_cids.each do |cid|
                     IPMI.users(cid).user(@property_hash[:userid]).tap do |user|
-                        user.privilege = @property_flush[:"role_#{cid}"]                                      if not @property_flush[:"role_#{cid}"].nil?
+                        # on newer supermicro firmware it refuses to set 'NO ACCESS' privilege, instead it auto-sets 'Unknown (0x00)' when user is deleted
+                        user.privilege = @property_flush[:"role_#{cid}"]                                      if not @property_flush[:"role_#{cid}"].nil? and @property_flush[:"role_#{cid}"] != user.privilege
                         user.callin    = HelperCoerceBoolean.to_boolean(@property_flush[:"callin_#{cid}"])    if not @property_flush[:"callin_#{cid}"].nil?
                         user.link      = HelperCoerceBoolean.to_boolean(@property_flush[:"link_auth_#{cid}"]) if not @property_flush[:"link_auth_#{cid}"].nil?
                         user.ipmi      = HelperCoerceBoolean.to_boolean(@property_flush[:"ipmi_msg_#{cid}"])  if not @property_flush[:"ipmi_msg_#{cid}"].nil?
